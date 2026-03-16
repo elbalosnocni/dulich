@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<h2>Admin Du Lịch</h2>
+
+<button onclick="autoRoom()">Xếp phòng tự động</button>
+
+<script>
+
+const API="https://script.google.com/macros/s/AKfycbzHR7iYAxL5JBpyJO5mzlZ2CP-CwE1rtjn2iREHbXAVuzr0BNn_P2ntesXk5_Wa0Mzv/exec"
+
+function autoRoom(){
+
+fetch(API+"?action=rooms")
+
+alert("Đã xếp phòng")
+
+}
+
+</script>
+
+</body>
+</html>
