@@ -75,7 +75,7 @@ document.getElementById("search").oninput = async function(){
 
 const q = this.value
 
-const url="https://script.google.com/macros/s/AKfycbzHR7iYAxL5JBpyJO5mzlZ2CP-CwE1rtjn2iREHbXAVuzr0BNn_P2ntesXk5_Wa0Mzv/exec"+q
+const url="https://script.google.com/macros/s/AKfycbzHR7iYAxL5JBpyJO5mzlZ2CP-CwE1rtjn2iREHbXAVuzr0BNn_P2ntesXk5_Wa0Mzv/exec?action=search&q="+q
 
 const res = await fetch(url)
 
@@ -143,7 +143,7 @@ const family = document.getElementById("family").value
 
 const tong = document.getElementById("money").innerText
 
-const url="https://script.google.com/macros/s/AKfycbzHR7iYAxL5JBpyJO5mzlZ2CP-CwE1rtjn2iREHbXAVuzr0BNn_P2ntesXk5_Wa0Mzv/exec"+
+const url="https://script.google.com/macros/s/AKfycbzHR7iYAxL5JBpyJO5mzlZ2CP-CwE1rtjn2iREHbXAVuzr0BNn_P2ntesXk5_Wa0Mzv/exec?action=register"+
 "&ma="+nhanvien.ma+
 "&ten="+nhanvien.ten+
 "&gioitinh="+nhanvien.gioitinh+
