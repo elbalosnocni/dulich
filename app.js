@@ -125,3 +125,45 @@ async function register(){
     location.reload()
   }
 }
+let selectedNV = null;
+
+async function search() {
+    let q = document.getElementById('search').value;
+    if (q.length < 2) return;
+    
+    let res = await fetch(`${API}?action=search&q=${q}`);
+    let data = await res.json();
+    
+    let html = data.map(nv => `
+        <div class="item" onclick='selectNV(${JSON.stringify(nv)})'>
+            ${nv.ten} - ${nv.ma} (${nv.bophan})
+        </div>
+    `).join('');
+    document.getElementById('result-list').innerHTML = html;
+}
+
+function selectNV(nv) {
+    selectedNV = nv;
+    document.getElementById('info-card').classList.remove('hidden');
+    document.getElementById('display-name').innerText = nv.ten;
+    document.getElementById('display-detail').innerText = `${nv.ma} | ${nv.nhamay} | ${nv.chucvu}`;
+    
+    // Tự động chọn mức giá theo công đoàn
+    if (nv.congdoan === "Có") {
+        document.getElementById('reg-type').value = "1100000";
+        document.getElementById('opt-kcd').disabled = true;
+    } else {
+        document.getElementById('reg-type').value = "2100000";
+        document.getElementById('opt-cd').disabled = true;
+    }
+    calculate();
+}
+
+function calculate() {
+    let base = parseInt(document.getElementById('reg-type').value);
+    let childPrice = document.getElementById('child').value * 1550000;
+    let adultPrice = document.getElementById('adult').value * 3100000;
+    
+    let total = base + childPrice + adultPrice;
+    document.getElementById('total-price').innerText = total.toLocaleString();
+}
