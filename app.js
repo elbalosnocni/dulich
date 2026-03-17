@@ -1,68 +1,62 @@
-const API_URL="https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec"
+const API="https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec"
 
-const search = document.getElementById("search")
-const adult = document.getElementById("adult")
-const child = document.getElementById("child")
-const family = document.getElementById("family")
-const result = document.getElementById("result")
-const money = document.getElementById("money")
+const search=document.getElementById("search")
+const result=document.getElementById("result")
+
+const adult=document.getElementById("adult")
+const child=document.getElementById("child")
+const family=document.getElementById("family")
+const money=document.getElementById("money")
 
 let nv=null
 
-function normalize(str){
-  return str.toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
-    .replace(/đ/g,"d")
-}
 
-search.oninput = async function(){
+search.oninput=async function(){
 
-  const q = this.value.trim()
+  const q=this.value.trim()
 
   if(q.length<2){
-    result.innerHTML = ""
+    result.innerHTML=""
     return
   }
 
-  const q2 = normalize(q)
+  const res=await fetch(API+"?action=search&q="+encodeURIComponent(q))
+  const data=await res.json()
 
-  const res = await fetch(API_URL+"?action=search&q="+encodeURIComponent(q2))
-  const data = await res.json()
+  if(data.length==0){
+    result.innerHTML="<div>Không tìm thấy</div>"
+    return
+  }
 
   let html=""
-  
-  if(data.length===0){
-    result.innerHTML = "<div>Không tìm thấy</div>"
-    return
-  }
 
   data.slice(0,5).forEach(n=>{
-    html += `
+    html+=`
     <div class="item" data='${encodeURIComponent(JSON.stringify(n))}'>
       ${n.ten} (${n.ma})
     </div>`
   })
 
-  result.innerHTML = html
+  result.innerHTML=html
 }
 
 
-result.onclick = function(e){
+result.onclick=function(e){
 
-  const item = e.target.closest(".item")
+  const item=e.target.closest(".item")
   if(!item) return
 
-  const data = item.getAttribute("data")
+  const data=item.getAttribute("data")
 
   pick(JSON.parse(decodeURIComponent(data)))
 }
 
 
 function pick(n){
-  nv = n
 
-  result.innerHTML = `
+  nv=n
+
+  result.innerHTML=`
   <b>${n.ten}</b><br>
   ${n.bophan} - ${n.chucvu}
   `
@@ -75,28 +69,28 @@ function calc(){
 
   if(!nv) return
 
-  let a = +adult.value
-  let c = +child.value
-  let f = +family.value
+  let a=+adult.value
+  let c=+child.value
+  let f=+family.value
 
-  let price = 0
+  let price=0
 
   if(nv.congdoan=="Có"){
-    price += a*1100000
+    price+=a*1100000
   }else{
-    price += a*2100000
+    price+=a*2100000
   }
 
-  price += c*1550000
-  price += f*3100000
+  price+=c*1550000
+  price+=f*3100000
 
-  money.innerText = price.toLocaleString()+" đ"
-  money.dataset.value = price
+  money.innerText=price.toLocaleString()+" đ"
+  money.dataset.value=price
 }
 
 
 document.querySelectorAll("input").forEach(e=>{
-  e.oninput = calc
+  e.oninput=calc
 })
 
 
@@ -107,7 +101,7 @@ async function register(){
     return
   }
 
-  const url = API_URL+"?action=register"+
+  const url=API+"?action=register"+
   "&ma="+encodeURIComponent(nv.ma)+
   "&ten="+encodeURIComponent(nv.ten)+
   "&gioitinh="+encodeURIComponent(nv.gioitinh)+
@@ -117,14 +111,17 @@ async function register(){
   "&family="+family.value+
   "&total="+money.dataset.value
 
-  const res = await fetch(url)
-  const text = await res.text()
+  const res=await fetch(url)
+  const text=await res.text()
 
   if(text=="EXIST"){
     alert("Nhân viên đã đăng ký")
-  }else if(text=="CLOSED"){
+  }
+  else if(text=="CLOSED"){
     alert("Đã hết hạn đăng ký")
-  }else{
+  }
+  else{
     alert("Đăng ký thành công")
+    location.reload()
   }
 }
