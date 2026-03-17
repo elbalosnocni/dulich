@@ -1,38 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Du lịch 2026</title>
 <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
-<h2>Đăng ký Du Lịch Công Ty</h2>
+<div class="container">
+
+<h2>🌴 Du lịch Công ty 2026</h2>
 
 <div class="card">
-
-<input id="search" placeholder="Tìm tên nhân viên">
-
+<input id="search" placeholder="🔍 Nhập tên nhân viên">
 <div id="result"></div>
-
 </div>
 
 <div class="card">
 
-<label>Người lớn</label>
-<input type="number" id="adult" value="1">
+<label>👨 Người lớn</label>
+<input type="number" id="adult" value="1" min="0">
 
-<label>Trẻ em (6–10)</label>
-<input type="number" id="child" value="0">
+<label>👶 Trẻ em (6–10)</label>
+<input type="number" id="child" value="0" min="0">
 
-<label>Người thân ≥11</label>
-<input type="number" id="family" value="0">
+<label>👨‍👩‍👧 Người thân ≥11</label>
+<input type="number" id="family" value="0" min="0">
 
-<h3 id="money">0 đ</h3>
+<h3>Tổng tiền</h3>
+<h2 id="money">0 đ</h2>
 
 <button onclick="register()">Đăng ký</button>
+
+</div>
 
 </div>
 
