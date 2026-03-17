@@ -1,33 +1,35 @@
 const API_URL="https://script.google.com/macros/s/AKfycbyQ2OS-y2wSEK1WeULo8PUHmC2oDk_YZsSNjRP3umxc7Y3EPQS600AN4s2r_KMo5On3mQ/exec"
+
 const search = document.getElementById("search")
 const adult = document.getElementById("adult")
 const child = document.getElementById("child")
 const family = document.getElementById("family")
 const result = document.getElementById("result")
 const money = document.getElementById("money")
+
 let nv=null
 
-search.oninput=async function(){
+search.oninput = async function(){
 
-const q=this.value
+  const q = this.value
+  if(q.length<2) return
 
-if(q.length<2) return
+  const q2 = q.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu,"")
 
-const res=await fetch(API_URL+"?action=search&q="+q)
+  const res = await fetch(API_URL+"?action=search&q="+q2)
+  const data = await res.json()
 
-const data=await res.json()
+  let html=""
 
-let html=""
+  data.slice(0,5).forEach(n=>{
+    html += `
+    <div class="item" data='${encodeURIComponent(JSON.stringify(n))}'>
+      ${n.ten} (${n.ma})
+    </div>`
+  })
 
-data.slice(0,5).forEach(n=>{
-
-html+=`
-<div onclick='pick(${JSON.stringify(n)})'>
-<div data='${encodeURIComponent(JSON.stringify(n))}'>
-${n.ten} (${n.ma})
-</div>``
-
-})
+  result.innerHTML = html
+}
 
 result.onclick = function(e){
   const data = e.target.getAttribute("data")
@@ -37,76 +39,68 @@ result.onclick = function(e){
 }
 
 function pick(n){
+  nv = n
 
-nv=n
+  result.innerHTML = `
+  <b>${n.ten}</b><br>
+  ${n.bophan} - ${n.chucvu}
+  `
 
-result.innerHTML=`
-<b>${n.ten}</b><br>
-${n.bophan} - ${n.chucvu}
-`
-
-calc()
-
+  calc()
 }
 
 function calc(){
 
-if(!nv) return
+  if(!nv) return
 
-let adult=+adult.value
-let child=+child.value
-let family=+family.value
+  let a = +adult.value
+  let c = +child.value
+  let f = +family.value
 
-let price=0
+  let price = 0
 
-if(nv.congdoan=="Có"){
+  if(nv.congdoan=="Có"){
+    price += a*1100000
+  }else{
+    price += a*2100000
+  }
 
-price+=adult*1100000
+  price += c*1550000
+  price += f*3100000
 
-}else{
-
-price+=adult*2100000
-
-}
-
-price+=child*1550000
-price+=family*3100000
-
-money.innerText=price.toLocaleString()+" đ"
-
+  money.innerText = price.toLocaleString()+" đ"
+  money.dataset.value = price
 }
 
 document.querySelectorAll("input").forEach(e=>{
-e.oninput=calc
+  e.oninput = calc
 })
 
 async function register(){
 
-if(!nv){
-alert("Chọn nhân viên")
-return
-}
+  if(!nv){
+    alert("Chọn nhân viên")
+    return
+  }
 
-const url=API_URL+"?action=register"+
-"&ma="+encodeURIComponent(nv.ma)+
-"&ten="+encodeURIComponent(nv.ten)+
-"&gioitinh="+encodeURIComponent(nv.gioitinh)+
-"&congdoan="+encodeURIComponent(nv.congdoan)+
-"&adult="+adult.value+
-"&child="+child.value+
-"&family="+family.value+
-"&total="+encodeURIComponent(money.innerText)
+  const url = API_URL+"?action=register"+
+  "&ma="+encodeURIComponent(nv.ma)+
+  "&ten="+encodeURIComponent(nv.ten)+
+  "&gioitinh="+encodeURIComponent(nv.gioitinh)+
+  "&congdoan="+encodeURIComponent(nv.congdoan)+
+  "&adult="+adult.value+
+  "&child="+child.value+
+  "&family="+family.value+
+  "&total="+money.dataset.value
 
-const res=await fetch(url)
+  const res = await fetch(url)
+  const text = await res.text()
 
-const text=await res.text()
-
-if(text=="EXIST"){
-alert("Nhân viên đã đăng ký")
-}else if(text=="CLOSED"){
-alert("Đã hết hạn đăng ký")
-}else{
-alert("Đăng ký thành công")
-}
-
+  if(text=="EXIST"){
+    alert("Nhân viên đã đăng ký")
+  }else if(text=="CLOSED"){
+    alert("Đã hết hạn đăng ký")
+  }else{
+    alert("Đăng ký thành công")
+  }
 }
