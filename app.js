@@ -1,4 +1,4 @@
-const API_URL="https://script.google.com/macros/s/AKfycbyQ2OS-y2wSEK1WeULo8PUHmC2oDk_YZsSNjRP3umxc7Y3EPQS600AN4s2r_KMo5On3mQ/exec"
+const API_URL="https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec"
 
 const search = document.getElementById("search")
 const adult = document.getElementById("adult")
