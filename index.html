@@ -1,33 +1,176 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{font-family:sans-serif;background:#f5f5f5;padding:10px}
-.card{background:#fff;padding:15px;margin:10px 0;border-radius:10px}
-input{width:100%;padding:10px;margin:5px 0}
-button{width:100%;padding:12px;background:#2196F3;color:#fff;border:none}
+
+body{
+font-family:sans-serif;
+background:#f2f2f2;
+padding:20px
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:10px;
+margin-bottom:15px
+}
+
+input,button{
+width:100%;
+padding:12px;
+margin-top:8px;
+font-size:16px
+}
+
+button{
+background:#2ecc71;
+color:white;
+border:none;
+border-radius:6px
+}
+
 </style>
+
 </head>
 
 <body>
 
-<h2>Đăng ký du lịch</h2>
+<h2>Đăng ký Du Lịch</h2>
 
 <div class="card">
-<input id="search" placeholder="Nhập tên nhân viên">
+
+<input id="search" placeholder="Tìm tên (không dấu)">
+
 <div id="result"></div>
+
 </div>
 
 <div class="card">
+
+<label>Người lớn</label>
 <input type="number" id="adult" value="1">
+
+<label>Trẻ em (6-10)</label>
 <input type="number" id="child" value="0">
+
+<label>Người thân ≥11</label>
 <input type="number" id="family" value="0">
+
 <h3 id="money">0 đ</h3>
+
 <button onclick="register()">Đăng ký</button>
+
 </div>
 
-<script src="app.js"></script>
+<script>
+
+const API="DÁN_LINK_SCRIPT_EXEC"
+
+let nhanvien=null
+
+document.getElementById("search").oninput=async function(){
+
+const q=this.value
+
+if(q.length<2) return
+
+const res=await fetch(API+"?action=search&q="+q)
+
+const data=await res.json()
+
+let html=""
+
+data.slice(0,5).forEach(n=>{
+
+html+=`
+<div onclick='selectNV(${JSON.stringify(n)})'>
+${n.ten} (${n.ma})
+</div>`
+
+})
+
+document.getElementById("result").innerHTML=html
+
+}
+
+function selectNV(n){
+
+nhanvien=n
+
+document.getElementById("result").innerHTML=
+`
+<b>${n.ten}</b><br>
+${n.bophan} - ${n.chucvu}
+`
+
+calc()
+
+}
+
+function calc(){
+
+if(!nhanvien) return
+
+const adult=+adult.value
+const child=+child.value
+const family=+family.value
+
+let price=0
+
+if(nhanvien.congdoan=="Có"){
+price+=adult*1100000
+}else{
+price+=adult*2100000
+}
+
+price+=child*1550000
+price+=family*3100000
+
+money.innerText=price.toLocaleString()+" đ"
+
+}
+
+document.querySelectorAll("input").forEach(e=>{
+e.oninput=calc
+})
+
+async function register(){
+
+if(!nhanvien){
+alert("Chọn nhân viên")
+return
+}
+
+const url=
+API+"?action=register"+
+"&ma="+nhanvien.ma+
+"&ten="+encodeURIComponent(nhanvien.ten)+
+"&gioitinh="+nhanvien.gioitinh+
+"&congdoan="+nhanvien.congdoan+
+"&nguoilon="+adult.value+
+"&treem="+child.value+
+"&family="+family.value+
+"&tongtien="+money.innerText
+
+const res=await fetch(url)
+
+const text=await res.text()
+
+if(text=="EXIST"){
+alert("Nhân viên đã đăng ký")
+}else if(text=="CLOSED"){
+alert("Đã hết hạn đăng ký")
+}else{
+alert("Đăng ký thành công")
+}
+
+}
+
+</script>
 
 </body>
 </html>
