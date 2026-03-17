@@ -1,169 +1,88 @@
-const API="https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec"
+const API = "https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec";
 
-const search=document.getElementById("search")
-const result=document.getElementById("result")
+const searchInput = document.getElementById("search");
+const resultDiv = document.getElementById("result");
+const adultInput = document.getElementById("adult");
+const childInput = document.getElementById("child");
+const familyInput = document.getElementById("family");
+const moneyDisplay = document.getElementById("money");
 
-const adult=document.getElementById("adult")
-const child=document.getElementById("child")
-const family=document.getElementById("family")
-const money=document.getElementById("money")
+let nv = null;
 
-let nv=null
+// 1. Tìm kiếm nhân viên
+searchInput.oninput = async function() {
+    const q = this.value.trim();
+    if (q.length < 2) { resultDiv.innerHTML = ""; return; }
 
+    const res = await fetch(API + "?action=search&q=" + encodeURIComponent(q));
+    const data = await res.json();
 
-search.oninput=async function(){
-
-  const q=this.value.trim()
-
-  if(q.length<2){
-    result.innerHTML=""
-    return
-  }
-
-  const res=await fetch(API+"?action=search&q="+encodeURIComponent(q))
-  const data=await res.json()
-
-  if(data.length==0){
-    result.innerHTML="<div>Không tìm thấy</div>"
-    return
-  }
-
-  let html=""
-
-  data.slice(0,5).forEach(n=>{
-    html+=`
-    <div class="item" data='${encodeURIComponent(JSON.stringify(n))}'>
-      ${n.ten} (${n.ma})
-    </div>`
-  })
-
-  result.innerHTML=html
-}
-
-
-result.onclick=function(e){
-
-  const item=e.target.closest(".item")
-  if(!item) return
-
-  const data=item.getAttribute("data")
-
-  pick(JSON.parse(decodeURIComponent(data)))
-}
-
-
-function pick(n){
-
-  nv=n
-
-  result.innerHTML=`
-  <b>${n.ten}</b><br>
-  ${n.bophan} - ${n.chucvu}
-  `
-
-  calc()
-}
-
-
-function calc(){
-
-  if(!nv) return
-
-  let a=+adult.value
-  let c=+child.value
-  let f=+family.value
-
-  let price=0
-
-  if(nv.congdoan=="Có"){
-    price+=a*1100000
-  }else{
-    price+=a*2100000
-  }
-
-  price+=c*1550000
-  price+=f*3100000
-
-  money.innerText=price.toLocaleString()+" đ"
-  money.dataset.value=price
-}
-
-
-document.querySelectorAll("input").forEach(e=>{
-  e.oninput=calc
-})
-
-
-async function register(){
-
-  if(!nv){
-    alert("Chọn nhân viên")
-    return
-  }
-
-  const url=API+"?action=register"+
-  "&ma="+encodeURIComponent(nv.ma)+
-  "&ten="+encodeURIComponent(nv.ten)+
-  "&gioitinh="+encodeURIComponent(nv.gioitinh)+
-  "&congdoan="+encodeURIComponent(nv.congdoan)+
-  "&adult="+adult.value+
-  "&child="+child.value+
-  "&family="+family.value+
-  "&total="+money.dataset.value
-
-  const res=await fetch(url)
-  const text=await res.text()
-
-  if(text=="EXIST"){
-    alert("Nhân viên đã đăng ký")
-  }
-  else if(text=="CLOSED"){
-    alert("Đã hết hạn đăng ký")
-  }
-  else{
-    alert("Đăng ký thành công")
-    location.reload()
-  }
-}
-let selectedNV = null;
-
-async function search() {
-    let q = document.getElementById('search').value;
-    if (q.length < 2) return;
-    
-    let res = await fetch(`${API}?action=search&q=${q}`);
-    let data = await res.json();
-    
-    let html = data.map(nv => `
-        <div class="item" onclick='selectNV(${JSON.stringify(nv)})'>
-            ${nv.ten} - ${nv.ma} (${nv.bophan})
-        </div>
-    `).join('');
-    document.getElementById('result-list').innerHTML = html;
-}
-
-function selectNV(nv) {
-    selectedNV = nv;
-    document.getElementById('info-card').classList.remove('hidden');
-    document.getElementById('display-name').innerText = nv.ten;
-    document.getElementById('display-detail').innerText = `${nv.ma} | ${nv.nhamay} | ${nv.chucvu}`;
-    
-    // Tự động chọn mức giá theo công đoàn
-    if (nv.congdoan === "Có") {
-        document.getElementById('reg-type').value = "1100000";
-        document.getElementById('opt-kcd').disabled = true;
-    } else {
-        document.getElementById('reg-type').value = "2100000";
-        document.getElementById('opt-cd').disabled = true;
+    if (data.length == 0) {
+        resultDiv.innerHTML = "<div>Không tìm thấy</div>";
+        return;
     }
-    calculate();
+
+    let html = "";
+    data.slice(0, 5).forEach(n => {
+        html += `<div class="item" onclick='pick(${JSON.stringify(n)})' style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
+            ${n.ten} (${n.ma}) - ${n.bophan}
+        </div>`;
+    });
+    resultDiv.innerHTML = html;
+};
+
+// 2. Chọn nhân viên
+function pick(n) {
+    nv = n;
+    resultDiv.innerHTML = `<div style="background:#e3f2fd; padding:10px; border-radius:5px;">
+        <b>Đã chọn: ${n.ten}</b><br>Mã: ${n.ma} - CD: ${n.congdoan}
+    </div>`;
+    calc();
 }
 
-function calculate() {
-    let base = parseInt(document.getElementById('reg-type').value);
-    let childPrice = document.getElementById('child').value * 1550000;
-    let adultPrice = document.getElementById('adult').value * 3100000;
+// 3. Tính tiền tự động
+function calc() {
+    if (!nv) return;
+    let a = +adultInput.value || 0;
+    let c = +childInput.value || 0;
+    let f = +familyInput.value || 0;
+
+    let price = (nv.congdoan === "Có") ? 1100000 : 2100000; // Giá cho bản thân NV
+    // Nếu có thêm người lớn đi kèm (adult > 1)
+    if (a > 1) {
+        price += (a - 1) * 3100000;
+    }
+    price += c * 1550000;
+    price += f * 3100000;
+
+    moneyDisplay.innerText = price.toLocaleString();
+    moneyDisplay.dataset.value = price;
+}
+
+// Cập nhật giá khi thay đổi số lượng
+[adultInput, childInput, familyInput].forEach(el => el.oninput = calc);
+
+// 4. Gửi đăng ký
+async function register() {
+    if (!nv) { alert("Vui lòng chọn nhân viên trước!"); return; }
     
-    let total = base + childPrice + adultPrice;
-    document.getElementById('total-price').innerText = total.toLocaleString();
+    const url = API + "?action=register" +
+        "&ma=" + encodeURIComponent(nv.ma) +
+        "&ten=" + encodeURIComponent(nv.ten) +
+        "&gioitinh=" + encodeURIComponent(nv.gioitinh) +
+        "&congdoan=" + encodeURIComponent(nv.congdoan) +
+        "&adult=" + adultInput.value +
+        "&child=" + childInput.value +
+        "&family=" + familyInput.value +
+        "&total=" + moneyDisplay.dataset.value;
+
+    const res = await fetch(url);
+    const text = await res.text();
+
+    if (text == "EXIST") alert("Lỗi: Nhân viên này đã đăng ký rồi!");
+    else if (text == "CLOSED") alert("Hệ thống đã khóa (quá hạn 27/03)!");
+    else {
+        alert("Chúc mừng! Đăng ký thành công.");
+        location.reload();
+    }
 }
