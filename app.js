@@ -35,7 +35,7 @@ elSearch.oninput = async function() {
 window.pickNV = function(n) {
     currentNV = n;
     elResult.innerHTML = `<div class="selected-box">
-        <b>✅ Đã chọn: ${n.ten}</b><br>Mã: ${n.ma} | Công đoàn: ${n.congdoan}
+        <b>✅ Đã chọn: ${n.ten}</b><br>Mã: ${n.ma} | Công đoàn: ${n.congdoan} | BP: ${n.bophan}
     </div>`;
     calculatePrice();
 };
