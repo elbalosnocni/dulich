@@ -9,20 +9,22 @@ const money = document.getElementById("money")
 
 let nv=null
 
-search.oninput = async function(){
-
-  const q = this.value
-
-  if(q.length<2){
-    result.innerHTML = ""
-    return
-  }
-  function normalize(str){
+function normalize(str){
   return str.toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g,"")
     .replace(/đ/g,"d")
 }
+
+search.oninput = async function(){
+
+  const q = this.value.trim()
+
+  if(q.length<2){
+    result.innerHTML = ""
+    return
+  }
+
   const q2 = normalize(q)
 
   const res = await fetch(API_URL+"?action=search&q="+encodeURIComponent(q2))
@@ -31,8 +33,10 @@ search.oninput = async function(){
   let html=""
   
   if(data.length===0){
-  result.innerHTML = "<div>Không tìm thấy</div>"
-}
+    result.innerHTML = "<div>Không tìm thấy</div>"
+    return
+  }
+
   data.slice(0,5).forEach(n=>{
     html += `
     <div class="item" data='${encodeURIComponent(JSON.stringify(n))}'>
@@ -42,6 +46,7 @@ search.oninput = async function(){
 
   result.innerHTML = html
 }
+
 
 result.onclick = function(e){
 
@@ -53,6 +58,7 @@ result.onclick = function(e){
   pick(JSON.parse(decodeURIComponent(data)))
 }
 
+
 function pick(n){
   nv = n
 
@@ -63,6 +69,7 @@ function pick(n){
 
   calc()
 }
+
 
 function calc(){
 
@@ -87,9 +94,11 @@ function calc(){
   money.dataset.value = price
 }
 
+
 document.querySelectorAll("input").forEach(e=>{
-  e. = calc
+  e.oninput = calc
 })
+
 
 async function register(){
 
