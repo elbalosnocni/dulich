@@ -12,15 +12,27 @@ let nv=null
 search.oninput = async function(){
 
   const q = this.value
-  if(q.length<2) return
 
-  const q2 = q.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu,"")
+  if(q.length<2){
+    result.innerHTML = ""
+    return
+  }
+  function normalize(str){
+  return str.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/đ/g,"d")
+}
+  const q2 = normalize(q)
 
-  const res = await fetch(API_URL+"?action=search&q="+q2)
+  const res = await fetch(API_URL+"?action=search&q="+encodeURIComponent(q2))
   const data = await res.json()
 
   let html=""
-
+  
+  if(data.length===0){
+  result.innerHTML = "<div>Không tìm thấy</div>"
+}
   data.slice(0,5).forEach(n=>{
     html += `
     <div class="item" data='${encodeURIComponent(JSON.stringify(n))}'>
@@ -32,10 +44,13 @@ search.oninput = async function(){
 }
 
 result.onclick = function(e){
-  const data = e.target.getAttribute("data")
-  if(data){
-    pick(JSON.parse(decodeURIComponent(data)))
-  }
+
+  const item = e.target.closest(".item")
+  if(!item) return
+
+  const data = item.getAttribute("data")
+
+  pick(JSON.parse(decodeURIComponent(data)))
 }
 
 function pick(n){
@@ -73,7 +88,7 @@ function calc(){
 }
 
 document.querySelectorAll("input").forEach(e=>{
-  e.oninput = calc
+  e. = calc
 })
 
 async function register(){
