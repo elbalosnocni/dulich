@@ -1,5 +1,10 @@
 const API_URL="https://script.google.com/macros/s/AKfycbyQ2OS-y2wSEK1WeULo8PUHmC2oDk_YZsSNjRP3umxc7Y3EPQS600AN4s2r_KMo5On3mQ/exec"
-
+const search = document.getElementById("search")
+const adult = document.getElementById("adult")
+const child = document.getElementById("child")
+const family = document.getElementById("family")
+const result = document.getElementById("result")
+const money = document.getElementById("money")
 let nv=null
 
 search.oninput=async function(){
@@ -18,13 +23,17 @@ data.slice(0,5).forEach(n=>{
 
 html+=`
 <div onclick='pick(${JSON.stringify(n)})'>
+<div data='${encodeURIComponent(JSON.stringify(n))}'>
 ${n.ten} (${n.ma})
-</div>`
+</div>``
 
 })
 
-result.innerHTML=html
-
+result.onclick = function(e){
+  const data = e.target.getAttribute("data")
+  if(data){
+    pick(JSON.parse(decodeURIComponent(data)))
+  }
 }
 
 function pick(n){
@@ -79,14 +88,14 @@ return
 }
 
 const url=API_URL+"?action=register"+
-"&ma="+nv.ma+
+"&ma="+encodeURIComponent(nv.ma)+
 "&ten="+encodeURIComponent(nv.ten)+
-"&gioitinh="+nv.gioitinh+
-"&congdoan="+nv.congdoan+
+"&gioitinh="+encodeURIComponent(nv.gioitinh)+
+"&congdoan="+encodeURIComponent(nv.congdoan)+
 "&adult="+adult.value+
 "&child="+child.value+
 "&family="+family.value+
-"&total="+money.innerText
+"&total="+encodeURIComponent(money.innerText)
 
 const res=await fetch(url)
 
