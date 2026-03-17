@@ -1,88 +1,114 @@
-const API = "https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec";
 
-const searchInput = document.getElementById("search");
-const resultDiv = document.getElementById("result");
-const adultInput = document.getElementById("adult");
-const childInput = document.getElementById("child");
-const familyInput = document.getElementById("family");
-const moneyDisplay = document.getElementById("money");
+// Đặt tên biến khác đi để tránh trùng với ID của HTML
+const elSearch = document.getElementById("search");
+const elResult = document.getElementById("result");
+const elAdult = document.getElementById("adult");
+const elChild = document.getElementById("child");
+const elFamily = document.getElementById("family");
+const elMoney = document.getElementById("money");
 
-let nv = null;
+let currentNV = null;
 
-// 1. Tìm kiếm nhân viên
-searchInput.oninput = async function() {
-    const q = this.value.trim();
-    if (q.length < 2) { resultDiv.innerHTML = ""; return; }
+// Xử lý tìm kiếm
+elSearch.oninput = async function() {
+    const query = this.value.trim();
+    if (query.length < 2) { elResult.innerHTML = ""; return; }
 
-    const res = await fetch(API + "?action=search&q=" + encodeURIComponent(q));
-    const data = await res.json();
+    try {
+        const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(query)}`);
+        const data = await res.json();
 
-    if (data.length == 0) {
-        resultDiv.innerHTML = "<div>Không tìm thấy</div>";
+        if (data.length === 0) {
+            elResult.innerHTML = "<div style='padding:10px'>Không tìm thấy</div>";
+            return;
+        }
+
+        let html = "";
+        data.slice(0, 5).forEach(n => {
+            html += `<div class="item-search" onclick='pickNV(${JSON.stringify(n)})'>
+                ${n.ten} (${n.ma}) - ${n.bophan}
+            </div>`;
+        });
+        elResult.innerHTML = html;
+    } catch (e) {
+        console.error("Lỗi tìm kiếm:", e);
+    }
+};
+
+// Hàm chọn nhân viên
+window.pickNV = function(n) {
+    currentNV = n;
+    elResult.innerHTML = `<div class="selected-box">
+        <b>✅ Đã chọn: ${n.ten}</b><br>
+        Mã: ${n.ma} | Công đoàn: ${n.congdoan}
+    </div>`;
+    calculatePrice();
+};
+
+// Hàm tính tiền
+function calculatePrice() {
+    if (!currentNV) return;
+    
+    let a = parseInt(elAdult.value) || 0;
+    let c = parseInt(elChild.value) || 0;
+    let f = parseInt(elFamily.value) || 0;
+
+    // Phí bản thân dựa trên công đoàn
+    let total = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
+    
+    // Nếu chọn nhiều hơn 1 người lớn (người thân đi kèm)
+    if (a > 1) total += (a - 1) * 3100000;
+    
+    total += c * 1550000;
+    total += f * 3100000;
+
+    elMoney.innerText = total.toLocaleString() + " đ";
+    elMoney.dataset.value = total;
+}
+
+// Lắng nghe thay đổi số lượng để tính lại tiền
+[elAdult, elChild, elFamily].forEach(input => {
+    input.oninput = calculatePrice;
+});
+
+// Hàm Đăng ký (Gán vào window để HTML gọi được)
+window.register = async function() {
+    if (!currentNV) {
+        alert("Vui lòng tìm và chọn nhân viên trước!");
         return;
     }
 
-    let html = "";
-    data.slice(0, 5).forEach(n => {
-        html += `<div class="item" onclick='pick(${JSON.stringify(n)})' style="cursor:pointer; padding:10px; border-bottom:1px solid #eee;">
-            ${n.ten} (${n.ma}) - ${n.bophan}
-        </div>`;
+    const btn = document.querySelector(".btn-submit");
+    btn.innerText = "ĐANG GỬI...";
+    btn.disabled = true;
+
+    const params = new URLSearchParams({
+        action: "register",
+        ma: currentNV.ma,
+        ten: currentNV.ten,
+        gioitinh: currentNV.gioitinh,
+        congdoan: currentNV.congdoan,
+        adult: elAdult.value,
+        child: elChild.value,
+        family: elFamily.value,
+        total: elMoney.dataset.value
     });
-    resultDiv.innerHTML = html;
+
+    try {
+        const res = await fetch(`${API_URL}?${params.toString()}`);
+        const text = await res.text();
+
+        if (text === "EXIST") alert("Nhân viên này đã đăng ký rồi!");
+        else if (text === "CLOSED") alert("Hệ thống đã khóa ngày 27/03!");
+        else {
+            alert("Đăng ký thành công!");
+            location.reload();
+        }
+    } catch (e) {
+        alert("Lỗi kết nối mạng!");
+    } finally {
+        btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
+        btn.disabled = false;
+    }
 };
-
-// 2. Chọn nhân viên
-function pick(n) {
-    nv = n;
-    resultDiv.innerHTML = `<div style="background:#e3f2fd; padding:10px; border-radius:5px;">
-        <b>Đã chọn: ${n.ten}</b><br>Mã: ${n.ma} - CD: ${n.congdoan}
-    </div>`;
-    calc();
-}
-
-// 3. Tính tiền tự động
-function calc() {
-    if (!nv) return;
-    let a = +adultInput.value || 0;
-    let c = +childInput.value || 0;
-    let f = +familyInput.value || 0;
-
-    let price = (nv.congdoan === "Có") ? 1100000 : 2100000; // Giá cho bản thân NV
-    // Nếu có thêm người lớn đi kèm (adult > 1)
-    if (a > 1) {
-        price += (a - 1) * 3100000;
-    }
-    price += c * 1550000;
-    price += f * 3100000;
-
-    moneyDisplay.innerText = price.toLocaleString();
-    moneyDisplay.dataset.value = price;
-}
-
-// Cập nhật giá khi thay đổi số lượng
-[adultInput, childInput, familyInput].forEach(el => el.oninput = calc);
-
-// 4. Gửi đăng ký
-async function register() {
-    if (!nv) { alert("Vui lòng chọn nhân viên trước!"); return; }
-    
-    const url = API + "?action=register" +
-        "&ma=" + encodeURIComponent(nv.ma) +
-        "&ten=" + encodeURIComponent(nv.ten) +
-        "&gioitinh=" + encodeURIComponent(nv.gioitinh) +
-        "&congdoan=" + encodeURIComponent(nv.congdoan) +
-        "&adult=" + adultInput.value +
-        "&child=" + childInput.value +
-        "&family=" + familyInput.value +
-        "&total=" + moneyDisplay.dataset.value;
-
-    const res = await fetch(url);
-    const text = await res.text();
-
-    if (text == "EXIST") alert("Lỗi: Nhân viên này đã đăng ký rồi!");
-    else if (text == "CLOSED") alert("Hệ thống đã khóa (quá hạn 27/03)!");
-    else {
-        alert("Chúc mừng! Đăng ký thành công.");
-        location.reload();
-    }
-}
