@@ -1,44 +1,52 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Du lịch 2026</title>
-<link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+    <div class="app-container">
+        <h2>ĐĂNG KÝ DU LỊCH 2026</h2>
+        
+        <div class="card">
+            <label>Tìm tên hoặc Mã NV (không dấu):</label>
+            <input type="text" id="search" placeholder="Ví dụ: nva hoặc CH021...">
+            <div id="result-list" class="search-results"></div>
+        </div>
 
-<div class="container">
+        <div id="info-card" class="card hidden">
+            <h3 id="display-name"></h3>
+            <p id="display-detail"></p>
+            <hr>
+            <label>Chọn loại đăng ký:</label>
+            <select id="reg-type" onchange="calculate()">
+                <option value="1100000" id="opt-cd">Bản thân (Đoàn viên: 1.1tr)</option>
+                <option value="2100000" id="opt-kcd">Bản thân (Không ĐV: 2.1tr)</option>
+            </select>
+            
+            <label>Người thân đi kèm:</label>
+            <div class="row">
+                <span>Trẻ em (6-10t): 1.55tr</span>
+                <input type="number" id="child" value="0" min="0" onchange="calculate()">
+            </div>
+            <div class="row">
+                <span>Người lớn (≥11t): 3.1tr</span>
+                <input type="number" id="adult" value="0" min="0" onchange="calculate()">
+            </div>
 
-<h2>🌴 Du lịch Công ty 2026</h2>
+            <label>Gợi ý xếp phòng:</label>
+            <select id="room-type">
+                <option value="Tu dong">Hệ thống tự xếp (Cùng giới tính)</option>
+                <option value="Gia dinh">Phòng Gia đình (Ở riêng)</option>
+            </select>
 
-<div class="card">
-<input id="search" placeholder="🔍 Nhập tên nhân viên">
-<div id="result"></div>
-</div>
+            <div class="total-box">
+                Tổng tiền: <span id="total-price">0</span> đ
+            </div>
+            <button onclick="submitData()" id="btn-submit">XÁC NHẬN ĐĂNG KÝ</button>
+        </div>
+    </div>
 
-<div class="card">
-
-<label>👨 Người lớn</label>
-<input type="number" id="adult" value="1" min="0">
-
-<label>👶 Trẻ em (6–10)</label>
-<input type="number" id="child" value="0" min="0">
-
-<label>👨‍👩‍👧 Người thân ≥11</label>
-<input type="number" id="family" value="0" min="0">
-
-<h3>Tổng tiền</h3>
-<h2 id="money">0 đ</h2>
-
-<button onclick="register()">Đăng ký</button>
-
-</div>
-
-</div>
-
-<script src="app.js"></script>
-
+    <script src="app.js"></script>
 </body>
 </html>
