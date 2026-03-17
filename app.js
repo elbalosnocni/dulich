@@ -1,6 +1,5 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec";
 
-// Đặt tên biến khác đi để tránh trùng với ID của HTML
 const elSearch = document.getElementById("search");
 const elResult = document.getElementById("result");
 const elAdult = document.getElementById("adult");
@@ -10,7 +9,7 @@ const elMoney = document.getElementById("money");
 
 let currentNV = null;
 
-// Xử lý tìm kiếm
+// Tìm kiếm nhân viên
 elSearch.oninput = async function() {
     const query = this.value.trim();
     if (query.length < 2) { elResult.innerHTML = ""; return; }
@@ -18,12 +17,10 @@ elSearch.oninput = async function() {
     try {
         const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(query)}`);
         const data = await res.json();
-
         if (data.length === 0) {
             elResult.innerHTML = "<div style='padding:10px'>Không tìm thấy</div>";
             return;
         }
-
         let html = "";
         data.slice(0, 5).forEach(n => {
             html += `<div class="item-search" onclick='pickNV(${JSON.stringify(n)})'>
@@ -31,54 +28,40 @@ elSearch.oninput = async function() {
             </div>`;
         });
         elResult.innerHTML = html;
-    } catch (e) {
-        console.error("Lỗi tìm kiếm:", e);
-    }
+    } catch (e) { console.error("Lỗi:", e); }
 };
 
-// Hàm chọn nhân viên
+// Chọn nhân viên
 window.pickNV = function(n) {
     currentNV = n;
     elResult.innerHTML = `<div class="selected-box">
-        <b>✅ Đã chọn: ${n.ten}</b><br>
-        Mã: ${n.ma} | Công đoàn: ${n.congdoan}
+        <b>✅ Đã chọn: ${n.ten}</b><br>Mã: ${n.ma} | Công đoàn: ${n.congdoan}
     </div>`;
     calculatePrice();
 };
 
-// Hàm tính tiền
+// Tính tiền
 function calculatePrice() {
     if (!currentNV) return;
-    
     let a = parseInt(elAdult.value) || 0;
     let c = parseInt(elChild.value) || 0;
     let f = parseInt(elFamily.value) || 0;
 
-    // Phí bản thân dựa trên công đoàn
-    let total = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
-    
-    // Nếu chọn nhiều hơn 1 người lớn (người thân đi kèm)
+    let basePrice = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
+    let total = basePrice;
     if (a > 1) total += (a - 1) * 3100000;
-    
-    total += c * 1550000;
-    total += f * 3100000;
+    total += (c * 1550000) + (f * 3100000);
 
-    elMoney.innerText = total.toLocaleString() + " đ";
+    elMoney.innerText = total.toLocaleString();
     elMoney.dataset.value = total;
 }
 
-// Lắng nghe thay đổi số lượng để tính lại tiền
-[elAdult, elChild, elFamily].forEach(input => {
-    input.oninput = calculatePrice;
-});
+[elAdult, elChild, elFamily].forEach(input => input.oninput = calculatePrice);
 
-// Hàm Đăng ký (Gán vào window để HTML gọi được)
+// Gửi đăng ký
 window.register = async function() {
-    if (!currentNV) {
-        alert("Vui lòng tìm và chọn nhân viên trước!");
-        return;
-    }
-
+    if (!currentNV) return alert("Vui lòng chọn nhân viên!");
+    
     const btn = document.querySelector(".btn-submit");
     btn.innerText = "ĐANG GỬI...";
     btn.disabled = true;
@@ -89,7 +72,7 @@ window.register = async function() {
         ten: currentNV.ten,
         gioitinh: currentNV.gioitinh,
         congdoan: currentNV.congdoan,
-        adult: elAdult.value,
+        adult: elAdult.value, 
         child: elChild.value,
         family: elFamily.value,
         total: elMoney.dataset.value
@@ -98,17 +81,9 @@ window.register = async function() {
     try {
         const res = await fetch(`${API_URL}?${params.toString()}`);
         const text = await res.text();
-
         if (text === "EXIST") alert("Nhân viên này đã đăng ký rồi!");
         else if (text === "CLOSED") alert("Hệ thống đã khóa ngày 27/03!");
-        else {
-            alert("Đăng ký thành công!");
-            location.reload();
-        }
-    } catch (e) {
-        alert("Lỗi kết nối mạng!");
-    } finally {
-        btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
-        btn.disabled = false;
-    }
+        else { alert("Đăng ký thành công!"); location.reload(); }
+    } catch (e) { alert("Lỗi kết nối!"); }
+    finally { btn.innerText = "XÁC NHẬN ĐĂNG KÝ"; btn.disabled = false; }
 };
