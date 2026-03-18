@@ -23,9 +23,9 @@ elSearch.oninput = async function() {
         }
         let html = "";
         data.slice(0, 5).forEach(n => {
-         // dùng onclick JSON dễ vỡ khi tên có dấu → lỗi click / render   html += `<div class="item-search" onclick='pickNV(${JSON.stringify(n)})'>
-        // đổi thành
-            html += `<div class="item-search" data='${encodeURIComponent(JSON.stringify(n))}'>  
+         // dùng onclick JSON dễ vỡ khi tên có dấu → lỗi click / render   
+            html += `<div class="item-search" onclick='pickNV(${JSON.stringify(n)})'>
+        // đổi onclick JSON thành nhưng lỗi nên thôi   html += `<div class="item-search" data='${encodeURIComponent(JSON.stringify(n))}'>  
             ${n.ten} (${n.ma}) - ${n.bophan}
             </div>`;
         });
