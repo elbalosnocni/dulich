@@ -25,27 +25,22 @@
             
             <label><input type="radio" name="roomType" value="family"> Ở với gia đình</label>
             
-            <div id="mateBox" style="display:none; margin-top:10px;">
-              <input id="mateSearch" placeholder="Nhập tên người muốn ở cùng">
-              <div id="mateResult"></div>
-              <div id="mateList"></div>
-            </div>
-            </div>
-        <div class="card">
-            <div class="input-group">
-                <label>Người lớn đi kèm (>=11t): 3.1tr</label>
-                <input type="number" id="adult" value="1" min="1">
-            </div>
+            <div id="mateBox" style="display:none;">
+           <input type="text" id="mateSearch" placeholder="Nhập tên người muốn ở cùng">
+           <div id="mateResult"></div>
+           <div id="mateList"></div>
+        </div>
+        
+        <div id="familyFields" style="display:none; border-left: 3px solid #4CAF50; padding-left: 10px;">
+            <div>Người lớn đi kèm (>=11t): 3.1tr</div>
+            <input type="number" id="adult" value="0">
             
-            <div class="input-group">
-                <label>Trẻ em (6-10t): 1.55tr</label>
-                <input type="number" id="child" value="0" min="0">
-            </div>
-
-            <div class="input-group">
-                <label>Người thân đi kèm (Phòng gia đình): 3.1tr</label>
-                <input type="number" id="family" value="0" min="0">
-            </div>
+            <div>Trẻ em (6-10t): 1.55tr</div>
+            <input type="number" id="child" value="0">
+            
+            <div>Người thân đi kèm (Phòng gia đình): 3.1tr</div>
+            <input type="number" id="family" value="0">
+        </div>
 
             <div class="total">
                 Tổng tiền: <span id="money" data-value="0">0</span> đ
