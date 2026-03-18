@@ -43,16 +43,24 @@ window.pickNV = function(n) {
 // Tính tiền
 function calculatePrice() {
     if (!currentNV) return;
-    let a = parseInt(elAdult.value) || 0;
-    let c = parseInt(elChild.value) || 0;
-    let f = parseInt(elFamily.value) || 0;
 
+    // Lấy giá trị từ các ô input
+    let extraAdults = parseInt(elAdult.value) || 0;
+    let children = parseInt(elChild.value) || 0;
+    let otherFamily = parseInt(elFamily.value) || 0;
+
+    // 1. Giá cho chính nhân viên (Suất gốc)
     let basePrice = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
-    let total = basePrice;
-    if (a > 1) total += (a - 1) * 3100000;
-    total += (c * 1550000) + (f * 3100000);
 
-    elMoney.innerText = total.toLocaleString();
+    // 2. Tổng tiền = Suất gốc + (Người lớn đi kèm * 3.1tr) + (Trẻ em * 1.55tr) + (Họ hàng * 3.1tr)
+    // Lưu ý: Nếu "Người lớn đi kèm" và "Họ hàng" cùng mức giá 3.1tr, bạn có thể gộp lại.
+    let total = basePrice 
+                + (extraAdults * 3100000) 
+                + (children * 1550000) 
+                + (otherFamily * 3100000);
+
+    // Hiển thị kết quả
+    elMoney.innerText = total.toLocaleString('vi-VN');
     elMoney.dataset.value = total;
 }
 
