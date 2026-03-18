@@ -17,40 +17,44 @@ elSearch.oninput = async function() {
     try {
         const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(query)}`);
         const data = await res.json();
+        
         if (data.length === 0) {
             elResult.innerHTML = "<div style='padding:10px'>Không tìm thấy</div>";
             return;
         }
-        let html = "";
-        data.slice(0, 5).forEach(n => {
-         // dùng onclick JSON dễ vỡ khi tên có dấu → lỗi click / render   
-            html += `<div class="item-search" onclick='pickNV(${JSON.stringify(n)})'>
-        // đổi onclick JSON thành nhưng lỗi nên thôi   html += `<div class="item-search" data='${encodeURIComponent(JSON.stringify(n))}'>  
-            ${n.ten} (${n.ma}) - ${n.bophan}
-            </div>`;
-        });
-        elResult.innerHTML = html;
 
-        // click handler khi bỏ dùng onclick JSON nhưng ko ngon
-                 //    elResult.onclick = function(e){
-                 //   const item = e.target.closest(".item-search");
-                 //   if(!item) return;
-                
-                 //   const n = JSON.parse(decodeURIComponent(item.getAttribute("data")));
-                 //   pickNV(n);
-              //  };
+        // Render kết quả an toàn bằng cách dùng encodeURIComponent
+        let html = data.slice(0, 5).map(n => {
+            const safeData = encodeURIComponent(JSON.stringify(n));
+            return `<div class="item-search" data-nv="${safeData}">
+                ${n.ten} (${n.ma}) - ${n.bophan}
+            </div>`;
+        }).join("");
         
+        elResult.innerHTML = html;
     } catch (e) { console.error("Lỗi:", e); }
 };
 
+// Xử lý sự kiện click chọn nhân viên (Event Delegation)
+elResult.onclick = function(e) {
+    const item = e.target.closest(".item-search");
+    if (!item) return;
+
+    // Giải mã dữ liệu an toàn
+    const n = JSON.parse(decodeURIComponent(item.getAttribute("data-nv")));
+    pickNV(n);
+};
 // Chọn nhân viên
 window.pickNV = function(n) {
     currentNV = n;
-    elResult.innerHTML = `<div class="selected-box">
-        <b>✅ Đã chọn: ${n.ten}</b><br>Mã: ${n.ma} | Công đoàn: ${n.congdoan} | BP: ${n.bophan} | VTri: ${n.chucvu}
-    </div>`;
+    elResult.innerHTML = `
+        <div class="selected-box" style="background:#e3f2fd; padding:10px; border-radius:5px; border:1px solid #2196f3">
+            <b>✅ Đã chọn: ${n.ten}</b><br>
+            <small>Mã: ${n.ma} | Giới tính: ${n.gioitinh} | Công đoàn: ${n.congdoan}</small>
+        </div>`;
     calculatePrice();
 };
+
 // HIỆN / ẨN CHỌN NGƯỜI Ở CÙNG
 const roomRadios = document.querySelectorAll("input[name=roomType]")
 const mateBox = document.getElementById("mateBox")
