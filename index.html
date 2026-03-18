@@ -16,6 +16,22 @@
             <div id="result"></div> </div>
 
         <div class="card">
+
+            <h3>Chọn hình thức phòng</h3>
+            
+            <label><input type="radio" name="roomType" value="auto" checked> Ghép tự động</label><br>
+            
+            <label><input type="radio" name="roomType" value="manual"> Chọn người ở cùng</label><br>
+            
+            <label><input type="radio" name="roomType" value="family"> Ở với gia đình</label>
+            
+            <div id="mateBox" style="display:none; margin-top:10px;">
+              <input id="mateSearch" placeholder="Nhập tên người muốn ở cùng">
+              <div id="mateResult"></div>
+              <div id="mateList"></div>
+            </div>
+            </div>
+        <div class="card">
             <div class="input-group">
                 <label>Người lớn đi kèm (>=11t): 3.1tr</label>
                 <input type="number" id="adult" value="1" min="1">
