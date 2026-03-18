@@ -23,11 +23,23 @@ elSearch.oninput = async function() {
         }
         let html = "";
         data.slice(0, 5).forEach(n => {
-            html += `<div class="item-search" onclick='pickNV(${JSON.stringify(n)})'>
-                ${n.ten} (${n.ma}) - ${n.bophan}
+         // dùng onclick JSON dễ vỡ khi tên có dấu → lỗi click / render   html += `<div class="item-search" onclick='pickNV(${JSON.stringify(n)})'>
+        // đổi thành
+            html += `<div class="item-search" data='${encodeURIComponent(JSON.stringify(n))}'>  
+            ${n.ten} (${n.ma}) - ${n.bophan}
             </div>`;
         });
         elResult.innerHTML = html;
+
+        // click handler
+     elResult.onclick = function(e){
+    const item = e.target.closest(".item-search");
+    if(!item) return;
+
+    const n = JSON.parse(decodeURIComponent(item.getAttribute("data")));
+    pickNV(n);
+};
+        
     } catch (e) { console.error("Lỗi:", e); }
 };
 
@@ -39,6 +51,62 @@ window.pickNV = function(n) {
     </div>`;
     calculatePrice();
 };
+// HIỆN / ẨN CHỌN NGƯỜI Ở CÙNG
+const roomRadios = document.querySelectorAll("input[name=roomType]")
+const mateBox = document.getElementById("mateBox")
+
+roomRadios.forEach(r=>{
+  r.onchange = ()=>{
+    mateBox.style.display = (r.value=="manual" && r.checked) ? "block" : "none"
+  }
+})
+
+// CHỌN NGƯỜI Ở CÙNG
+let mates = []
+
+const mateSearch = document.getElementById("mateSearch")
+const mateResult = document.getElementById("mateResult")
+const mateList = document.getElementById("mateList")
+
+mateSearch.oninput = async function(){
+
+  const q = this.value.trim()
+  if(q.length<2) return
+
+  const res = await fetch(API_URL+"?action=search&q="+encodeURIComponent(q))
+  const data = await res.json()
+
+  let html=""
+
+  data.slice(0,5).forEach(n=>{
+    html+=`<div class="item" data='${encodeURIComponent(JSON.stringify(n))}'>
+      ${n.ten}
+    </div>`
+  })
+
+  mateResult.innerHTML = html
+}
+
+mateResult.onclick = function(e){
+
+  const item = e.target.closest(".item")
+  if(!item) return
+
+  if(mates.length>=2){
+    alert("Tối đa 3 người/phòng")
+    return
+  }
+
+  const n = JSON.parse(decodeURIComponent(item.getAttribute("data")))
+
+  mates.push(n)
+
+  renderMates()
+}
+
+function renderMates(){
+  mateList.innerHTML = mates.map(m=>`<div>${m.ten}</div>`).join("")
+}
 
 // Tính tiền
 function calculatePrice() {
@@ -68,30 +136,44 @@ function calculatePrice() {
 
 // Gửi đăng ký
 window.register = async function() {
+
     if (!currentNV) return alert("Vui lòng chọn nhân viên!");
-    
+
     const btn = document.querySelector(".btn-submit");
     btn.innerText = "ĐANG GỬI...";
     btn.disabled = true;
 
+    const roomType = document.querySelector("input[name=roomType]:checked").value;
+
     const params = new URLSearchParams({
-        action: "register",
+        action:"register",
         ma: currentNV.ma,
         ten: currentNV.ten,
         gioitinh: currentNV.gioitinh,
         congdoan: currentNV.congdoan,
-        adult: elAdult.value, 
+        adult: elAdult.value,
         child: elChild.value,
         family: elFamily.value,
-        total: elMoney.dataset.value
+        total: elMoney.dataset.value,
+        roomType: roomType,
+        mates: JSON.stringify(mates)
     });
 
     try {
         const res = await fetch(`${API_URL}?${params.toString()}`);
         const text = await res.text();
-        if (text === "EXIST") alert("Nhân viên này đã đăng ký rồi!");
-        else if (text === "CLOSED") alert("Hệ thống đã khóa ngày 27/03!");
-        else { alert("Đăng ký thành công!"); location.reload(); }
-    } catch (e) { alert("Lỗi kết nối!"); }
-    finally { btn.innerText = "XÁC NHẬN ĐĂNG KÝ"; btn.disabled = false; }
+
+        if (text === "EXIST") alert("Nhân viên đã đăng ký!");
+        else if (text === "CLOSED") alert("Đã khóa!");
+        else {
+            alert("Đăng ký thành công!");
+            location.reload();
+        }
+
+    } catch (e) {
+        alert("Lỗi kết nối!");
+    }
+
+    btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
+    btn.disabled = false;
 };
