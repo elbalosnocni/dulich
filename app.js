@@ -56,14 +56,28 @@ window.pickNV = function(n) {
 };
 
 // HIỆN / ẨN CHỌN NGƯỜI Ở CÙNG
-const roomRadios = document.querySelectorAll("input[name=roomType]")
-const mateBox = document.getElementById("mateBox")
+// Bao các ô nhập Người lớn/Trẻ em/Người thân vào một DIV có id="familyFields"
+const familyFields = document.getElementById("familyFields");
+const roomRadios = document.querySelectorAll("input[name=roomType]");
 
-roomRadios.forEach(r=>{
-  r.onchange = ()=>{
-    mateBox.style.display = (r.value=="manual" && r.checked) ? "block" : "none"
-  }
-})
+roomRadios.forEach(r => {
+    r.onchange = () => {
+        // 1. Hiện ô tìm bạn nếu chọn "Chọn người ở cùng"
+        mateBox.style.display = (r.value == "manual") ? "block" : "none";
+
+        // 2. Chỉ hiện phần nhập người thân khi chọn "Ở với gia đình"
+        if (r.value == "family") {
+            familyFields.style.display = "block";
+        } else {
+            familyFields.style.display = "none";
+            // Reset giá trị về 0 để không tính tiền nhầm
+            elAdult.value = 0;
+            elChild.value = 0;
+            elFamily.value = 0;
+            calculatePrice();
+        }
+    };
+});
 
 // --- QUẢN LÝ CHỌN NGƯỜI Ở CÙNG ---
 let mates = [];
