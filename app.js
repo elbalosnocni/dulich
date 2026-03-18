@@ -6,120 +6,90 @@ const elAdult = document.getElementById("adult");
 const elChild = document.getElementById("child");
 const elFamily = document.getElementById("family");
 const elMoney = document.getElementById("money");
+const mateBox = document.getElementById("mateBox");
+const familyInputGroup = document.getElementById("familyFields"); // Đảm bảo ID này khớp với HTML
 
 let currentNV = null;
+let mates = [];
 
-// Tìm kiếm nhân viên
+// --- 1. TÌM KIẾM & CHỌN NHÂN VIÊN ---
 elSearch.oninput = async function() {
     const query = this.value.trim();
     if (query.length < 2) { elResult.innerHTML = ""; return; }
-
     try {
         const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(query)}`);
         const data = await res.json();
-        
         if (data.length === 0) {
             elResult.innerHTML = "<div style='padding:10px'>Không tìm thấy</div>";
             return;
         }
-
-        // Render kết quả an toàn bằng cách dùng encodeURIComponent
-        let html = data.slice(0, 5).map(n => {
-            const safeData = encodeURIComponent(JSON.stringify(n));
-            return `<div class="item-search" data-nv="${safeData}">
+        elResult.innerHTML = data.slice(0, 5).map(n => `
+            <div class="item-search" data-nv="${encodeURIComponent(JSON.stringify(n))}">
                 ${n.ten} (${n.ma}) - ${n.bophan}
-            </div>`;
-        }).join("");
-        
-        elResult.innerHTML = html;
-    } catch (e) { console.error("Lỗi:", e); }
+            </div>`).join("");
+    } catch (e) { console.error("Lỗi tìm kiếm:", e); }
 };
 
-// Xử lý sự kiện click chọn nhân viên (Event Delegation)
 elResult.onclick = function(e) {
     const item = e.target.closest(".item-search");
     if (!item) return;
-
-    // Giải mã dữ liệu an toàn
     const n = JSON.parse(decodeURIComponent(item.getAttribute("data-nv")));
-    pickNV(n);
-};
-// Chọn nhân viên
-window.pickNV = function(n) {
     currentNV = n;
     elResult.innerHTML = `
         <div class="selected-box" style="background:#e3f2fd; padding:10px; border-radius:5px; border:1px solid #2196f3">
             <b>✅ Đã chọn: ${n.ten}</b><br>
-            <small>Mã: ${n.ma} | Giới tính: ${n.gioitinh} | Công đoàn: ${n.congdoan} | BP: ${n.bophan} | VTri: ${n.chucvu}</small>
+            <small>Mã: ${n.ma} | GT: ${n.gioitinh} | Công đoàn: ${n.congdoan} | BP: ${n.bophan}</small>
         </div>`;
     calculatePrice();
 };
 
-// HIỆN / ẨN CHỌN NGƯỜI Ở CÙNG
-// Bao các ô nhập Người lớn/Trẻ em/Người thân vào một DIV có id="familyFields"
-const familyFields = document.getElementById("familyFields");
+// --- 2. ẨN/HIỆN PHẦN NHẬP LIỆU THEO RADIO ---
 const roomRadios = document.querySelectorAll("input[name=roomType]");
-
 roomRadios.forEach(r => {
     r.onchange = () => {
-        // 1. Hiện ô tìm bạn nếu chọn "Chọn người ở cùng"
-        mateBox.style.display = (r.value == "manual") ? "block" : "none";
+        // Hiện box chọn bạn nếu chọn "manual"
+        mateBox.style.display = (r.value === "manual") ? "block" : "none";
+        
+        // Hiện box người thân nếu chọn "family"
+        familyInputGroup.style.display = (r.value === "family") ? "block" : "none";
 
-        // 2. Chỉ hiện phần nhập người thân khi chọn "Ở với gia đình"
-        if (r.value == "family") {
-            familyFields.style.display = "block";
-        } else {
-            familyFields.style.display = "none";
-            // Reset giá trị về 0 để không tính tiền nhầm
+        // Reset giá trị về 0 nếu không phải chọn gia đình để tính tiền chuẩn
+        if (r.value !== "family") {
             elAdult.value = 0;
             elChild.value = 0;
             elFamily.value = 0;
-            calculatePrice();
         }
+        calculatePrice();
     };
 });
 
-// --- QUẢN LÝ CHỌN NGƯỜI Ở CÙNG ---
-let mates = [];
-const mateSearch = document.getElementById("mateSearch"); // Ô nhập tên đồng nghiệp
-const mateResult = document.getElementById("mateResult"); // Khu vực hiện danh sách gợi ý
-const mateList = document.getElementById("mateList");     // Khu vực hiện các tên đã chọn
+// --- 3. QUẢN LÝ CHỌN BẠN Ở CÙNG (MATES) ---
+const mateSearch = document.getElementById("mateSearch");
+const mateResult = document.getElementById("mateResult");
+const mateList = document.getElementById("mateList");
 
-// Tìm kiếm đồng nghiệp để ghép phòng
 mateSearch.oninput = async function() {
     const q = this.value.trim();
     if (q.length < 2) { mateResult.innerHTML = ""; return; }
-
     try {
         const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
         const data = await res.json();
-        
-        // Render danh sách gợi ý an toàn
         mateResult.innerHTML = data.slice(0, 5).map(n => `
-            <div class="item-mate" data-nv="${encodeURIComponent(JSON.stringify(n))}" 
-                 style="padding:8px; border-bottom:1px solid #eee; cursor:pointer;">
+            <div class="item-mate" data-nv="${encodeURIComponent(JSON.stringify(n))}" style="padding:8px; border-bottom:1px solid #eee; cursor:pointer;">
                 ${n.ten} (${n.ma})
-            </div>
-        `).join("");
+            </div>`).join("");
     } catch (e) { console.error("Lỗi tìm bạn:", e); }
 };
 
-// Xử lý khi click chọn một người bạn
 mateResult.onclick = function(e) {
     const item = e.target.closest(".item-mate");
     if (!item) return;
-
-    if (mates.length >= 2) {
-        alert("Một phòng tối đa 3 nhân viên (bao gồm bạn)!");
-        return;
-    }
+    if (!currentNV) { alert("Vui lòng chọn nhân viên chính trước!"); return; }
+    if (mates.length >= 2) { alert("Tối đa 3 người/phòng!"); return; }
 
     const n = JSON.parse(decodeURIComponent(item.getAttribute("data-nv")));
-    
-    // Kiểm tra không cho chọn trùng chính mình hoặc trùng người đã chọn
     if (n.ma === currentNV.ma || mates.some(m => m.ma === n.ma)) {
-        alert("Nhân viên này đã có trong danh sách!");
-        return;
+        alert("Nhân viên này đã có trong danh sách!"); return;
     }
 
     mates.push(n);
@@ -128,35 +98,12 @@ mateResult.onclick = function(e) {
     mateResult.innerHTML = "";
 };
 
-// Lấy thẻ bao ngoài của phần nhập số người (giả sử bạn đặt class là group-family)
-const familyInputGroup = document.getElementById("familyInputGroup"); 
-
-roomRadios.forEach(r => {
-  r.onchange = () => {
-    // Hiện ô chọn bạn khi chọn "manual"
-    mateBox.style.display = (r.value == "manual" && r.checked) ? "block" : "none";
-    
-    // HIỆN ô nhập người thân CHỈ KHI chọn "family"
-    // Bạn hãy bao các ô input người lớn/trẻ em vào 1 div có id là familyInputGroup
-    familyInputGroup.style.display = (r.value == "family" && r.checked) ? "block" : "none";
-    
-    // Nếu không phải ở với gia đình, reset các giá trị về 0 để tính tiền đúng
-    if (r.value !== "family") {
-        elAdult.value = 0;
-        elChild.value = 0;
-        elFamily.value = 0;
-        calculatePrice();
-    }
-  }
-});
-
 function renderMates() {
-    mateList.innerHTML = mates.map((m, index) => `
+    mateList.innerHTML = mates.map((m, i) => `
         <div style="background:#f1f3f4; padding:5px 10px; margin:5px 0; border-radius:15px; display:flex; justify-content:space-between;">
             <span>👤 ${m.ten}</span>
-            <span onclick="removeMate(${index})" style="color:red; cursor:pointer; font-weight:bold;">×</span>
-        </div>
-    `).join("");
+            <span onclick="removeMate(${i})" style="color:red; cursor:pointer; font-weight:bold;">×</span>
+        </div>`).join("");
 }
 
 window.removeMate = function(index) {
@@ -164,39 +111,39 @@ window.removeMate = function(index) {
     renderMates();
 };
 
-// --- LOGIC TÍNH TIỀN THEO GIAO DIỆN ---
+// --- 4. TÍNH TIỀN ---
 function calculatePrice() {
     if (!currentNV) return;
-
     const adult = parseInt(elAdult.value) || 0;
     const child = parseInt(elChild.value) || 0;
     const family = parseInt(elFamily.value) || 0;
 
-    // Suất gốc của nhân viên
     let basePrice = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
-    
-    // Tổng = Suất gốc + (Người lớn * 3.1tr) + (Trẻ em * 1.55tr) + (Người thân gia đình * 3.1tr)
     let total = basePrice + (adult * 3100000) + (child * 1550000) + (family * 3100000);
 
-    elMoney.innerText = total.toLocaleString('vi-VN') + " đ";
+    elMoney.innerText = total.toLocaleString('vi-VN');
     elMoney.dataset.value = total;
 }
-
 [elAdult, elChild, elFamily].forEach(input => input.oninput = calculatePrice);
 
-// Gửi đăng ký
+// --- 5. GỬI ĐĂNG KÝ ---
 window.register = async function() {
-
     if (!currentNV) return alert("Vui lòng chọn nhân viên!");
-
-    const btn = document.querySelector(".btn-submit");
-    btn.innerText = "ĐANG GỬI...";
-    btn.disabled = true;
 
     const roomType = document.querySelector("input[name=roomType]:checked").value;
 
+    // Kiểm tra nếu chọn manual mà chưa có bạn
+    if (roomType === "manual" && mates.length === 0) {
+        if (!confirm("Bạn chọn tự chọn người ở cùng nhưng chưa chọn ai. Hệ thống sẽ để trống phòng, bạn có muốn tiếp tục?")) return;
+    }
+
+    const btn = document.querySelector(".btn-submit");
+    const originalText = btn.innerText;
+    btn.innerText = "ĐANG GỬI...";
+    btn.disabled = true;
+
     const params = new URLSearchParams({
-        action:"register",
+        action: "register",
         ma: currentNV.ma,
         ten: currentNV.ten,
         gioitinh: currentNV.gioitinh,
@@ -213,19 +160,16 @@ window.register = async function() {
         const res = await fetch(`${API_URL}?${params.toString()}`);
         const text = await res.text();
 
-        if (text === "EXIST") alert("Nhân viên đã đăng ký!");
-        else if (text === "CLOSED") alert("Đã khóa!");
+        if (text === "EXIST") alert("Lỗi: Mã nhân viên này đã đăng ký trước đó!");
+        else if (text === "CLOSED") alert("Hệ thống đã khóa đăng ký (hết hạn 27/03)!");
         else {
-            alert("Đăng ký thành công!");
+            alert("Chúc mừng! Bạn đã đăng ký thành công.");
             location.reload();
         }
-
     } catch (e) {
-        alert("Lỗi kết nối!");
+        alert("Lỗi kết nối server. Vui lòng thử lại!");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
-    if (roomType === "manual" && mates.length === 0) {
-    if (!confirm("Bạn chọn tự chọn người ở cùng nhưng chưa chọn ai. Hệ thống sẽ để trống phòng, bạn có muốn tiếp tục?")) return;
-}
-    btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
-    btn.disabled = false;
 };
