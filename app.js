@@ -114,6 +114,28 @@ mateResult.onclick = function(e) {
     mateResult.innerHTML = "";
 };
 
+// Lấy thẻ bao ngoài của phần nhập số người (giả sử bạn đặt class là group-family)
+const familyInputGroup = document.getElementById("familyInputGroup"); 
+
+roomRadios.forEach(r => {
+  r.onchange = () => {
+    // Hiện ô chọn bạn khi chọn "manual"
+    mateBox.style.display = (r.value == "manual" && r.checked) ? "block" : "none";
+    
+    // HIỆN ô nhập người thân CHỈ KHI chọn "family"
+    // Bạn hãy bao các ô input người lớn/trẻ em vào 1 div có id là familyInputGroup
+    familyInputGroup.style.display = (r.value == "family" && r.checked) ? "block" : "none";
+    
+    // Nếu không phải ở với gia đình, reset các giá trị về 0 để tính tiền đúng
+    if (r.value !== "family") {
+        elAdult.value = 0;
+        elChild.value = 0;
+        elFamily.value = 0;
+        calculatePrice();
+    }
+  }
+});
+
 function renderMates() {
     mateList.innerHTML = mates.map((m, index) => `
         <div style="background:#f1f3f4; padding:5px 10px; margin:5px 0; border-radius:15px; display:flex; justify-content:space-between;">
