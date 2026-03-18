@@ -65,74 +65,84 @@ roomRadios.forEach(r=>{
   }
 })
 
-// CHỌN NGƯỜI Ở CÙNG
-let mates = []
+// --- QUẢN LÝ CHỌN NGƯỜI Ở CÙNG ---
+let mates = [];
+const mateSearch = document.getElementById("mateSearch"); // Ô nhập tên đồng nghiệp
+const mateResult = document.getElementById("mateResult"); // Khu vực hiện danh sách gợi ý
+const mateList = document.getElementById("mateList");     // Khu vực hiện các tên đã chọn
 
-const mateSearch = document.getElementById("mateSearch")
-const mateResult = document.getElementById("mateResult")
-const mateList = document.getElementById("mateList")
+// Tìm kiếm đồng nghiệp để ghép phòng
+mateSearch.oninput = async function() {
+    const q = this.value.trim();
+    if (q.length < 2) { mateResult.innerHTML = ""; return; }
 
-mateSearch.oninput = async function(){
+    try {
+        const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        
+        // Render danh sách gợi ý an toàn
+        mateResult.innerHTML = data.slice(0, 5).map(n => `
+            <div class="item-mate" data-nv="${encodeURIComponent(JSON.stringify(n))}" 
+                 style="padding:8px; border-bottom:1px solid #eee; cursor:pointer;">
+                ${n.ten} (${n.ma})
+            </div>
+        `).join("");
+    } catch (e) { console.error("Lỗi tìm bạn:", e); }
+};
 
-  const q = this.value.trim()
-  if(q.length<2) return
+// Xử lý khi click chọn một người bạn
+mateResult.onclick = function(e) {
+    const item = e.target.closest(".item-mate");
+    if (!item) return;
 
-  const res = await fetch(API_URL+"?action=search&q="+encodeURIComponent(q))
-  const data = await res.json()
+    if (mates.length >= 2) {
+        alert("Một phòng tối đa 3 nhân viên (bao gồm bạn)!");
+        return;
+    }
 
-  let html=""
+    const n = JSON.parse(decodeURIComponent(item.getAttribute("data-nv")));
+    
+    // Kiểm tra không cho chọn trùng chính mình hoặc trùng người đã chọn
+    if (n.ma === currentNV.ma || mates.some(m => m.ma === n.ma)) {
+        alert("Nhân viên này đã có trong danh sách!");
+        return;
+    }
 
-  data.slice(0,5).forEach(n=>{
-    html+=`<div class="item" data='${encodeURIComponent(JSON.stringify(n))}'>
-      ${n.ten}
-    </div>`
-  })
+    mates.push(n);
+    renderMates();
+    mateSearch.value = "";
+    mateResult.innerHTML = "";
+};
 
-  mateResult.innerHTML = html
+function renderMates() {
+    mateList.innerHTML = mates.map((m, index) => `
+        <div style="background:#f1f3f4; padding:5px 10px; margin:5px 0; border-radius:15px; display:flex; justify-content:space-between;">
+            <span>👤 ${m.ten}</span>
+            <span onclick="removeMate(${index})" style="color:red; cursor:pointer; font-weight:bold;">×</span>
+        </div>
+    `).join("");
 }
 
-mateResult.onclick = function(e){
+window.removeMate = function(index) {
+    mates.splice(index, 1);
+    renderMates();
+};
 
-  const item = e.target.closest(".item")
-  if(!item) return
-
-  if(mates.length>=2){
-    alert("Tối đa 3 người/phòng")
-    return
-  }
-
-  const n = JSON.parse(decodeURIComponent(item.getAttribute("data")))
-
-  mates.push(n)
-
-  renderMates()
-}
-
-function renderMates(){
-  mateList.innerHTML = mates.map(m=>`<div>${m.ten}</div>`).join("")
-}
-
-// Tính tiền
+// --- LOGIC TÍNH TIỀN THEO GIAO DIỆN ---
 function calculatePrice() {
     if (!currentNV) return;
 
-    // Lấy giá trị từ các ô input
-    let extraAdults = parseInt(elAdult.value) || 0;
-    let children = parseInt(elChild.value) || 0;
-    let otherFamily = parseInt(elFamily.value) || 0;
+    const adult = parseInt(elAdult.value) || 0;
+    const child = parseInt(elChild.value) || 0;
+    const family = parseInt(elFamily.value) || 0;
 
-    // 1. Giá cho chính nhân viên (Suất gốc)
+    // Suất gốc của nhân viên
     let basePrice = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
+    
+    // Tổng = Suất gốc + (Người lớn * 3.1tr) + (Trẻ em * 1.55tr) + (Người thân gia đình * 3.1tr)
+    let total = basePrice + (adult * 3100000) + (child * 1550000) + (family * 3100000);
 
-    // 2. Tổng tiền = Suất gốc + (Người lớn đi kèm * 3.1tr) + (Trẻ em * 1.55tr) + (Họ hàng * 3.1tr)
-    // Lưu ý: Nếu "Người lớn đi kèm" và "Họ hàng" cùng mức giá 3.1tr, bạn có thể gộp lại.
-    let total = basePrice 
-                + (extraAdults * 3100000) 
-                + (children * 1550000) 
-                + (otherFamily * 3100000);
-
-    // Hiển thị kết quả
-    elMoney.innerText = total.toLocaleString('vi-VN');
+    elMoney.innerText = total.toLocaleString('vi-VN') + " đ";
     elMoney.dataset.value = total;
 }
 
@@ -177,7 +187,9 @@ window.register = async function() {
     } catch (e) {
         alert("Lỗi kết nối!");
     }
-
+    if (roomType === "manual" && mates.length === 0) {
+    if (!confirm("Bạn chọn tự chọn người ở cùng nhưng chưa chọn ai. Hệ thống sẽ để trống phòng, bạn có muốn tiếp tục?")) return;
+}
     btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
     btn.disabled = false;
 };
