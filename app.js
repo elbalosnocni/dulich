@@ -31,14 +31,14 @@ elSearch.oninput = async function() {
         });
         elResult.innerHTML = html;
 
-        // click handler
-     elResult.onclick = function(e){
-    const item = e.target.closest(".item-search");
-    if(!item) return;
-
-    const n = JSON.parse(decodeURIComponent(item.getAttribute("data")));
-    pickNV(n);
-};
+        // click handler khi bỏ dùng onclick JSON nhưng ko ngon
+                 //    elResult.onclick = function(e){
+                 //   const item = e.target.closest(".item-search");
+                 //   if(!item) return;
+                
+                 //   const n = JSON.parse(decodeURIComponent(item.getAttribute("data")));
+                 //   pickNV(n);
+              //  };
         
     } catch (e) { console.error("Lỗi:", e); }
 };
