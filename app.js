@@ -50,7 +50,7 @@ window.pickNV = function(n) {
     elResult.innerHTML = `
         <div class="selected-box" style="background:#e3f2fd; padding:10px; border-radius:5px; border:1px solid #2196f3">
             <b>✅ Đã chọn: ${n.ten}</b><br>
-            <small>Mã: ${n.ma} | Giới tính: ${n.gioitinh} | Công đoàn: ${n.congdoan}</small>
+            <small>Mã: ${n.ma} | Giới tính: ${n.gioitinh} | Công đoàn: ${n.congdoan} | BP: ${n.bophan} | VTri: ${n.chucvu}</small>
         </div>`;
     calculatePrice();
 };
