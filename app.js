@@ -196,7 +196,6 @@ function calculatePrice() {
 // --- 6. GỬI ĐĂNG KÝ ---
 window.register = async function() {
     if (!currentNV) return alert("Vui lòng chọn nhân viên!");
-
     const roomType = document.querySelector("input[name=roomType]:checked").value;
 
     // Kiểm tra nếu chọn manual mà chưa có bạn
@@ -220,7 +219,7 @@ window.register = async function() {
         total: elMoney.dataset.value,
         roomType: roomType,
         // Gửi thông tin familyMate để Code.gs biết có người thân trong cty
-        familyMate: familyMate ? JSON.stringify(familyMate) : "", 
+        familyMate: (roomType === "family" && familyMate) ? JSON.stringify(familyMate) : "",
         mates: (roomType === "family" && familyMate) ? JSON.stringify([familyMate]) : JSON.stringify(mates)
     });
 
