@@ -141,6 +141,12 @@ function checkLimit() {
 // --- ĐĂNG KÝ ---
 window.register = async function() {
     if (!currentNV) return alert("Vui lòng chọn nhân viên chính!");
+
+    // Kiểm tra nếu chọn manual mà chưa có bạn
+    if (roomType === "manual" && mates.length === 0) {
+    if (!confirm("Bạn chọn tự chọn người ở cùng nhưng chưa chọn ai. Hệ thống sẽ để trống phòng, bạn có muốn tiếp tục?")) return;
+    }
+
     const btn = document.querySelector(".btn-submit");
     btn.disabled = true; btn.innerText = "ĐANG GỬI...";
 
@@ -153,11 +159,20 @@ window.register = async function() {
         mates: JSON.stringify(mates)
     });
 
-    try {
+   try {
         const res = await fetch(`${API_URL}?${params.toString()}`);
-        const result = await res.text();
-        if (result === "SUCCESS") { alert("Chúc mừng! Bạn đã đăng ký thành công."); location.reload(); }
-        else alert("Lỗi: " + result);
-    } catch (e) { alert("Lỗi kết nối server!"); }
-    btn.disabled = false; btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
+        const text = await res.text();
+
+        if (text === "EXIST") alert("Lỗi: Mã nhân viên này đã đăng ký trước đó!");
+        else if (text === "CLOSED") alert("Hệ thống đã khóa đăng ký (hết hạn 27/03)!");
+        else {
+            alert("Chúc mừng! Bạn đã đăng ký thành công.");
+            location.reload();
+        }
+    } catch (e) {
+        alert("Lỗi kết nối server. Vui lòng thử lại!");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
 };
