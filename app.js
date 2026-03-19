@@ -8,9 +8,13 @@ const elFamily = document.getElementById("family");
 const elMoney = document.getElementById("money");
 const mateBox = document.getElementById("mateBox");
 const familyInputGroup = document.getElementById("familyFields"); // Đảm bảo ID này khớp với HTML
+const elFamilyMateSearch = document.getElementById("familyMateSearch"); //thêm các biến để điều khiển ô tìm kiếm người thân
+const elFamilyMateResult = document.getElementById("familyMateResult");
+const elSelectedFamilyMate = document.getElementById("selectedFamilyMate");
 
 let currentNV = null;
 let mates = [];
+let familyMate = null; // Lưu thông tin người thân cùng công ty
 
 // --- 1. TÌM KIẾM & CHỌN NHÂN VIÊN ---
 elSearch.oninput = async function() {
@@ -57,7 +61,8 @@ roomRadios.forEach(r => {
         if (r.value !== "family") {
             elAdult.value = 0;
             elChild.value = 0;
-            elFamily.value = 0;
+            familyMate = null; // Lưu thông tin người thân cùng công ty
+            elSelectedFamilyMate.innerHTML = "";
         }
         calculatePrice();
     };
@@ -111,23 +116,70 @@ window.removeMate = function(index) {
     renderMates();
 };
 
-// --- 4. TÍNH TIỀN ---
-let familyMate = null; // Lưu thông tin người thân cùng công ty
+// --- 4. TÌM KIẾM NGƯỜI THÂN CÙNG CÔNG TY ---
+elFamilyMateSearch.oninput = async function() {
+    const q = this.value.trim();
+    if (q.length < 2) { elFamilyMateResult.innerHTML = ""; return; }
+    try {
+        const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        elFamilyMateResult.innerHTML = data.slice(0, 5).map(n => `
+            <div class="item-family-mate" data-nv="${encodeURIComponent(JSON.stringify(n))}" style="padding:8px; border-bottom:1px solid #eee; cursor:pointer;">
+                ${n.ten} (${n.ma}) - ${n.bophan}
+            </div>`).join("");
+    } catch (e) { console.error("Lỗi tìm người thân:", e); }
+};
+
+// Khi click chọn người thân từ danh sách gợi ý
+elFamilyMateResult.onclick = function(e) {
+    const item = e.target.closest(".item-family-mate");
+    if (!item) return;
+    
+    const n = JSON.parse(decodeURIComponent(item.getAttribute("data-nv")));
+    
+    // Kiểm tra không được chọn chính mình làm người thân
+    if (currentNV && n.ma === currentNV.ma) {
+        alert("Không thể chọn chính mình làm người thân!");
+        return;
+    }
+
+    familyMate = n; // Gán vào biến global đã khai báo
+    
+    // Hiển thị người đã chọn lên giao diện
+    elSelectedFamilyMate.innerHTML = `
+        <div style="background:#f1f8e9; padding:5px 10px; margin:5px 0; border-radius:5px; display:flex; justify-content:space-between; border:1px solid #8bc34a">
+            <span>👤 ${n.ten} (${n.ma})</span>
+            <span onclick="removeFamilyMate()" style="color:red; cursor:pointer; font-weight:bold;">× Gỡ bỏ</span>
+        </div>`;
+    
+    elFamilyMateSearch.value = "";
+    elFamilyMateResult.innerHTML = "";
+    calculatePrice(); // Tính lại tiền ngay lập tức
+};
+
+// Hàm gỡ bỏ người thân đã chọn
+window.removeFamilyMate = function() {
+    familyMate = null;
+    elSelectedFamilyMate.innerHTML = "";
+    calculatePrice();
+};
+
+// --- 5. TÍNH TIỀN ---
 
 // Hàm tính tiền cập nhật
 function calculatePrice() {
     if (!currentNV) return;
 
-    // 4.1. Suất của nhân viên chính
+    // 5.1. Suất của nhân viên chính
     let total = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
 
-    // 4.2. Nếu có người thân cùng công ty
+    // 5.2. Nếu có người thân cùng công ty
     if (familyMate) {
         let matePrice = (familyMate.congdoan === "Có") ? 1100000 : 2100000;
         total += matePrice;
     }
 
-    // 4.3. Người thân ngoài công ty & trẻ em
+    // 5.3. Người thân ngoài công ty & trẻ em
     const adultCount = parseInt(elAdult.value) || 0;
     const childCount = parseInt(elChild.value) || 0;
     
@@ -141,7 +193,7 @@ function calculatePrice() {
 // (Tương tự như phần tìm kiếm đồng nghiệp bạn đã viết, nhưng gán vào biến familyMate)
 [elAdult, elChild].forEach(input => input.oninput = calculatePrice);
 
-// --- 5. GỬI ĐĂNG KÝ ---
+// --- 6. GỬI ĐĂNG KÝ ---
 window.register = async function() {
     if (!currentNV) return alert("Vui lòng chọn nhân viên!");
 
@@ -167,7 +219,8 @@ window.register = async function() {
         child: elChild.value,
         total: elMoney.dataset.value,
         roomType: roomType,
-        mates: JSON.stringify(mates)
+        // Nếu là family, gửi familyMate vào danh sách mates, nếu là manual gửi mảng mates cũ
+        mates: (roomType === "family" && familyMate) ? JSON.stringify([familyMate]) : JSON.stringify(mates)
     });
 
     try {
