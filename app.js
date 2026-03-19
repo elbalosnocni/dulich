@@ -229,14 +229,52 @@ window.register = async function() {
 
         if (text === "EXIST") alert("Lỗi: Nhân viên đã đăng ký trước đó!");
         else if (text === "CLOSED") alert("Hệ thống đã khóa đăng ký (hết hạn 27/03)!");
-        else {
-            alert("Chúc mừng! Bạn đã đăng ký thành công.");
-            location.reload();
+        else if (text === "SUCCESS") {
+            // --- THAY ĐỔI Ở ĐÂY ---
+            showSuccessInfo(roomType);
         }
     } catch (e) {
-        alert("Lỗi kết nối server. Vui lòng thử lại!");
+        alert("Lỗi kết nối server!");
     } finally {
         btn.innerText = originalText;
         btn.disabled = false;
     }
 };
+
+// Hàm hiển thị thông tin sau khi đăng ký thành công
+function showSuccessInfo(roomType) {
+    // Ẩn form đăng ký
+    document.querySelector(".card.p-4").style.display = "none";
+    
+    // Hiển thị card thành công
+    const successCard = document.getElementById("successCard");
+    const summary = document.getElementById("summaryContent");
+    successCard.style.display = "block";
+
+    let roomText = roomType === "auto" ? "Ghép tự động" : (roomType === "manual" ? "Chọn người ở cùng" : "Ở với gia đình");
+    
+    let detailHTML = `
+        <p><b>Mã nhân viên:</b> ${currentNV.ma}</p>
+        <p><b>Họ tên:</b> ${currentNV.ten}</p>
+        <p><b>Giới tính:</b> ${currentNV.gioitinh}</p>
+        <p><b>Hình thức phòng:</b> ${roomText}</p>
+    `;
+
+    if (roomType === "manual" && mates.length > 0) {
+        detailHTML += `<p><b>Bạn ở cùng:</b> ${mates.map(m => m.ten).join(", ")}</p>`;
+    }
+
+    if (roomType === "family") {
+        if (familyMates.length > 0) detailHTML += `<p><b>Người thân (Cùng CT):</b> ${familyMates.map(m => m.ten).join(", ")}</p>`;
+        if (elAdult.value > 0) detailHTML += `<p><b>Người lớn (Ngoài CT):</b> ${elAdult.value}</p>`;
+        if (elChild.value > 0) detailHTML += `<p><b>Trẻ em:</b> ${elChild.value}</p>`;
+    }
+
+    detailHTML += `
+        <hr>
+        <h4 class="text-danger text-center">TỔNG TIỀN: ${elMoney.innerText}</h4>
+        <p class="small text-center mt-2 italic">* Thời gian đăng ký: ${new Date().toLocaleString('vi-VN')}</p>
+    `;
+
+    summary.innerHTML = detailHTML;
+}
