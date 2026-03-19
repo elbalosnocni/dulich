@@ -23,7 +23,7 @@ window.selectMainNV = function(n) {
     currentNV = n;
     elSearch.value = ""; // Xóa text ô tìm kiếm
     elResult.innerHTML = ""; // XÓA DANH SÁCH GỢI Ý
-    document.getElementById("selected-nv").innerHTML = `<div class="selected-badge">✅ ${n.ten} (${n.ma})</div>`;
+    document.getElementById("selected-nv").innerHTML = `<div class="selected-badge">✅ ${n.ten} (${n.ma}) - ${n.chucvu} ${n.bophan} - Công đoàn: ${n.congdoan}</div>`;
     calculatePrice();
 };
 
