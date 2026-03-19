@@ -1,30 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Đăng ký du lịch</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký Du lịch 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body { background: #f4f7f6; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { max-width: 650px; margin: auto; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; }
+        .search-results { position: absolute; width: 100%; z-index: 1000; background: white; border: 1px solid #ddd; border-top: none; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .item-search, .item-mate, .item-family-mate { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s; }
+        .item-search:hover { background: #e3f2fd; color: #1976d2; }
+        .selected-badge { background: #e3f2fd; color: #1976d2; padding: 8px 15px; border-radius: 20px; display: inline-block; margin-top: 10px; font-weight: 600; }
+        .family-badge { background: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 15px; display: inline-flex; align-items: center; margin: 4px; border: 1px solid #c8e6c9; }
+        .remove-btn { margin-left: 8px; cursor: pointer; color: #c62828; font-weight: bold; }
+    </style>
 </head>
 <body>
+    <div class="card p-4">
+        <h3 class="text-center mb-4 text-primary">ĐĂNG KÝ DU LỊCH 2026</h3>
+        
+        <div class="mb-4 position-relative">
+            <label class="form-label"><b>1. Tìm tên hoặc mã nhân viên chính:</b></label>
+            <input type="text" id="search" class="form-control" placeholder="Nhập tên hoặc mã NV..." autocomplete="off">
+            <div id="result" class="search-results"></div>
+            <div id="selected-nv"></div>
+        </div>
 
-<h2>Đăng ký</h2>
+        <hr>
 
-<input id="search" placeholder="Tìm nhân viên">
-<div id="result"></div>
+        <label class="form-label"><b>2. Chọn hình thức phòng:</b></label>
+        <div class="mb-4 d-flex justify-content-between">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="roomType" id="r1" value="auto" checked>
+                <label class="form-check-label" for="r1">Ghép tự động</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="roomType" id="r2" value="manual">
+                <label class="form-check-label" for="r2">Chọn người ở cùng</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="roomType" id="r3" value="family">
+                <label class="form-check-label" for="r3">Ở với gia đình</label>
+            </div>
+        </div>
 
-<h3>Người thân cùng công ty (tối đa 2)</h3>
-<input id="familyMateSearch" placeholder="Tìm người thân">
-<div id="familyMateResult"></div>
-<div id="selectedFamilyMate"></div>
+        <div id="mateBox" style="display:none;" class="border p-3 rounded mb-3 bg-light">
+            <label class="form-label">Tìm đồng nghiệp ở chung (Phòng 3 người):</label>
+            <div class="position-relative">
+                <input type="text" id="mateSearch" class="form-control" placeholder="Tìm tên/mã bạn..." autocomplete="off">
+                <div id="mateResult" class="search-results"></div>
+            </div>
+            <div id="mateList" class="mt-2"></div>
+        </div>
 
-<h3>Người ngoài</h3>
-Người lớn: <input id="adult" type="number" value="0"><br>
-Trẻ em: <input id="child" type="number" value="0">
+        <div id="familyFields" style="display:none;" class="border p-3 rounded mb-3 bg-light text-success border-success">
+            <label class="form-label"><b>Người thân cùng công ty (Tối đa 2):</b></label>
+            <div class="position-relative mb-2">
+                <input type="text" id="familyMateSearch" class="form-control" placeholder="Tìm tên/mã người thân..." autocomplete="off">
+                <div id="familyMateResult" class="search-results"></div>
+            </div>
+            <div id="selectedFamilyMate"></div>
+            
+            <div class="row mt-3">
+                <div class="col-6">
+                    <label class="form-label small">Người thân ngoài CT (3.1tr):</label>
+                    <input type="number" id="adult" class="form-control" value="0" min="0">
+                </div>
+                <div class="col-6">
+                    <label class="form-label small">Trẻ em 6-10t (1.55tr):</label>
+                    <input type="number" id="child" class="form-control" value="0" min="0">
+                </div>
+            </div>
+        </div>
 
-<h2 id="money">0 đ</h2>
+        <div class="alert alert-primary d-flex justify-content-between align-items-center py-2">
+            <b>TỔNG TIỀN:</b>
+            <h4 class="mb-0 text-danger" id="money" data-value="0">0 đ</h4>
+        </div>
 
-<button onclick="register()">Đăng ký</button>
-
-<script src="app.js"></script>
-
+        <button class="btn btn-primary w-100 py-2 btn-submit fw-bold" onclick="register()">XÁC NHẬN ĐĂNG KÝ</button>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>
