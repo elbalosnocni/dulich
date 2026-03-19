@@ -244,7 +244,7 @@ window.register = async function() {
 // Hàm hiển thị thông tin sau khi đăng ký thành công
 function showSuccessInfo(roomType) {
     // 1. Ẩn tất cả các phần tử nhập liệu bên trong card (trừ successCard)
-    const cardChildren = document.querySelectorAll(".card.p-4 > *:not(#successCard)");
+    const cardChildren = document.querySelectorAll(".card > :not(#successCard)").style.display = "none";
     cardChildren.forEach(el => el.style.display = "none");
 
     // 2. Hiển thị card thành công
