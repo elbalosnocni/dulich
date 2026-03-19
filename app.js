@@ -74,8 +74,6 @@ window.addFamilyMate = function(n) {
         alert("Phòng gia đình tối đa chỉ được 3 người (bao gồm cả trẻ em)!");
         return;
     }
-
-    if (familyMates.some(m => m.ma === n.ma)) return alert("Đã chọn người này!");
     
     familyMates.push(n);
     document.getElementById("familyMateSearch").value = ""; // Xóa text ô tìm kiếm
@@ -97,6 +95,25 @@ window.removeFamilyMate = function(i) {
     checkLimit(); // Khóa các ô nhập khác nếu cần
     calculatePrice();
 };
+
+// reset dữ liệu khi đổi chế độ phòng
+const roomRadios = document.querySelectorAll("input[name=roomType]");
+
+roomRadios.forEach(r => {
+    r.onchange = () => {
+        mates = [];
+        familyMates = [];
+
+        document.getElementById("mateList").innerHTML = "";
+        document.getElementById("selectedFamilyMate").innerHTML = "";
+
+        elAdult.value = 0;
+        elChild.value = 0;
+
+        checkLimit();
+        calculatePrice();
+    };
+});
 
 // --- TÍNH TIỀN ---
 function calculatePrice() {
@@ -158,18 +175,25 @@ window.register = async function() {
     if (!currentNV) return alert("Vui lòng chọn nhân viên chính!");
 
     // Kiểm tra nếu chọn manual mà chưa có bạn
+    const roomType = document.querySelector("input[name=roomType]:checked").value;
     if (roomType === "manual" && mates.length === 0) {
-    if (!confirm("Bạn chọn tự chọn người ở cùng nhưng chưa chọn ai. Hệ thống sẽ để trống phòng, bạn có muốn tiếp tục?")) return;
+    if (!confirm("Bạn chưa chọn bạn ở cùng, vẫn tiếp tục?")) return;
     }
 
     const btn = document.querySelector(".btn-submit");
+    const originalText = btn.innerText;
     btn.disabled = true; btn.innerText = "ĐANG GỬI...";
 
     const params = new URLSearchParams({
         action: "register",
-        ma: currentNV.ma, ten: currentNV.ten, gioitinh: currentNV.gioitinh, congdoan: currentNV.congdoan,
-        adult: elAdult.value, child: elChild.value, total: elMoney.dataset.value,
-        roomType: document.querySelector("input[name=roomType]:checked").value,
+        ma: currentNV.ma, 
+        ten: currentNV.ten, 
+        gioitinh: currentNV.gioitinh, 
+        congdoan: currentNV.congdoan,
+        adult: elAdult.value, 
+        child: elChild.value, 
+        total: elMoney.dataset.value,
+        roomType: roomType,
         familyMate: JSON.stringify(familyMates),
         mates: JSON.stringify(mates)
     });
@@ -178,7 +202,7 @@ window.register = async function() {
         const res = await fetch(`${API_URL}?${params.toString()}`);
         const text = await res.text();
 
-        if (text === "EXIST") alert("Lỗi: Mã nhân viên này đã đăng ký trước đó!");
+        if (text === "EXIST") alert("Lỗi: Nhân viên đã đăng ký trước đó!");
         else if (text === "CLOSED") alert("Hệ thống đã khóa đăng ký (hết hạn 27/03)!");
         else {
             alert("Chúc mừng! Bạn đã đăng ký thành công.");
