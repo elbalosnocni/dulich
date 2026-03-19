@@ -117,6 +117,7 @@ window.removeMate = function(index) {
 };
 
 // --- 4. TÌM KIẾM NGƯỜI THÂN CÙNG CÔNG TY ---
+let familyMates = []; // Dùng mảng để chứa tối đa 2 người thân cùng công ty
 elFamilyMateSearch.oninput = async function() {
     const q = this.value.trim();
     if (q.length < 2) { elFamilyMateResult.innerHTML = ""; return; }
@@ -134,27 +135,21 @@ elFamilyMateSearch.oninput = async function() {
 elFamilyMateResult.onclick = function(e) {
     const item = e.target.closest(".item-family-mate");
     if (!item) return;
-    
     const n = JSON.parse(decodeURIComponent(item.getAttribute("data-nv")));
     
     // Kiểm tra không được chọn chính mình làm người thân
-    if (currentNV && n.ma === currentNV.ma) {
-        alert("Không thể chọn chính mình làm người thân!");
-        return;
-    }
-
-    // Không cho trùng
-    if (familyMates.some(m => m.ma === n.ma)) {
-        alert("Người này đã được chọn!");
-        return;
-    }
-    
+    if (currentNV && n.ma === currentNV.ma) return alert("Không thể chọn chính mình!");
+    if (familyMates.some(m => m.ma === n.ma)) return alert("Người này đã được chọn!");
+    if (familyMates.length >= 2) return alert("Tối đa chọn thêm 2 người thân cùng công ty!");
     familyMates.push(n);
     renderFamilyMates();
-
+    elFamilyMateSearch.value = "";
+    elFamilyMateResult.innerHTML = "";
+    calculatePrice();
+};
     // Thêm hàm hiển thị danh sách
     function renderFamilyMates() {
-    elSelectedFamilyMate.innerHTML = familyMates.map((m, i) => `
+        elSelectedFamilyMate.innerHTML = familyMates.map((m, i) => `
         <div style="background:#f1f8e9; padding:5px 10px; margin:5px 0; border-radius:5px; display:flex; justify-content:space-between; border:1px solid #8bc34a">
             <span>👤 ${m.ten} (${m.ma})</span>
             <span onclick="removeFamilyMate(${i})" style="color:red; cursor:pointer;">×</span>
@@ -183,8 +178,8 @@ window.removeFamilyMate = function(index) {
 
 // --- 5. TÍNH TIỀN ---
 //  Biến lưu trữ danh sách người thân cùng công ty
-let familyMates = [];
-    elSelectedFamilyMate.innerHTML = "";
+//let familyMates = [];
+  //  elSelectedFamilyMate.innerHTML = "";
 // Hàm tính tiền cập nhật
 function calculatePrice() {
     if (!currentNV) return;
