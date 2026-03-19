@@ -114,14 +114,17 @@ window.removeMate = function(index) {
 // --- 4. TÍNH TIỀN ---
 function calculatePrice() {
     if (!currentNV) return;
-    const adult = parseInt(elAdult.value) || 0;
-    const child = parseInt(elChild.value) || 0;
-    const family = parseInt(elFamily.value) || 0;
 
+    const adultCount = parseInt(elAdult.value) || 0; // Gom chung người lớn và người thân vào đây
+    const childCount = parseInt(elChild.value) || 0;
+
+    // Suất gốc nhân viên (Có CĐ: 1.1tr, Không CĐ: 2.1tr)
     let basePrice = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
-    let total = basePrice + (adult * 3100000) + (child * 1550000) + (family * 3100000);
+    
+    // Tổng tiền mới
+    let total = basePrice + (adultCount * 3100000) + (childCount * 1550000);
 
-    elMoney.innerText = total.toLocaleString('vi-VN');
+    elMoney.innerText = total.toLocaleString('vi-VN') + " đ";
     elMoney.dataset.value = total;
 }
 [elAdult, elChild, elFamily].forEach(input => input.oninput = calculatePrice);
