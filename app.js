@@ -1,4 +1,4 @@
-const API_URL = "URL_CỦA_BẠN_Ở_ĐÂY";
+const API_URL = "https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec";
 
 let currentNV = null;
 let mates = [];
