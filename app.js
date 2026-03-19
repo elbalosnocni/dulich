@@ -219,7 +219,8 @@ window.register = async function() {
         child: elChild.value,
         total: elMoney.dataset.value,
         roomType: roomType,
-        // Nếu là family, gửi familyMate vào danh sách mates, nếu là manual gửi mảng mates cũ
+        // Gửi thông tin familyMate để Code.gs biết có người thân trong cty
+        familyMate: familyMate ? JSON.stringify(familyMate) : "", 
         mates: (roomType === "family" && familyMate) ? JSON.stringify([familyMate]) : JSON.stringify(mates)
     });
 
