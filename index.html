@@ -3,66 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Ký Du Lịch 2026</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Đăng ký Du lịch 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body { background: #f4f7f6; padding: 20px; }
+        .card { max-width: 600px; margin: auto; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .item-search, .item-mate, .item-family-mate { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .item-search:hover { background: #e3f2fd; }
+        #selected-nv, #selectedFamilyMate, #mateList { margin-top: 10px; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h2>ĐĂNG KÝ DU LỊCH 2026</h2>
+    <div class="card p-4">
+        <h3 class="text-center mb-4">ĐĂNG KÝ DU LỊCH 2026</h3>
         
-        <div class="card">
-            <label><b>Tìm tên NV:</b></label>
-            <input type="text" id="search" placeholder="Nhập tên hoặc mã NV...">
-            <div id="result"></div> 
+        <label class="form-label"><b>1. Tìm tên hoặc mã nhân viên:</b></label>
+        <input type="text" id="search" class="form-control" placeholder="Nhập để tìm...">
+        <div id="result"></div>
+        <div id="selected-nv"></div>
+
+        <hr>
+
+        <label class="form-label"><b>2. Chọn hình thức phòng:</b></label>
+        <div class="mb-3">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="roomType" id="r1" value="auto" checked>
+                <label class="form-check-label" for="r1">Ghép tự động (Phòng 3 người)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="roomType" id="r2" value="manual">
+                <label class="form-check-label" for="r2">Chọn người ở cùng (Đồng nghiệp)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="roomType" id="r3" value="family">
+                <label class="form-check-label" for="r3">Ở với gia đình (Phòng riêng)</label>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Chọn hình thức phòng</h3>
-            
-            <div class="radio-group">
-                <label><input type="radio" name="roomType" value="auto" checked> Ghép tự động</label><br>
-                
-                <label><input type="radio" name="roomType" value="manual"> Chọn người ở cùng</label><br>
-                
-                <label><input type="radio" name="roomType" value="family"> Ở với gia đình</label>
-            </div>
-
-            <div id="mateBox" style="display:none; margin-top: 15px;">
-                <input type="text" id="mateSearch" placeholder="Nhập tên người muốn ở cùng...">
-                <div id="mateResult" class="search-suggestions"></div>
-                <div id="mateList"></div>
-                <p class="note">* Ghép phòng: Chỉ áp dụng cho người cùng giới tính.</p>
-            </div>
-
-            <div id="familyFields" style="display:none; border-left: 4px solid #4CAF50; padding-left: 15px; margin-top: 15px;">
-                <div class="input-sub-group">
-                    <label><b>Người thân cùng công ty (nếu có):</b></label>
-                    <input type="text" id="familyMateSearch" placeholder="Nhập tên/mã người thân cùng cty...">
-                    <div id="familyMateResult" class="search-suggestions"></div>
-                    <div id="selectedFamilyMate"></div>
-                </div>
-                
-                <hr style="margin: 15px 0; opacity: 0.3;">
-                
-                <div class="input-sub-group">
-                    <label>Người thân ngoài công ty (>=11t): 3.1tr</label>
-                    <input type="number" id="adult" value="0" min="0">
-                </div>
-                
-                <div class="input-sub-group">
-                    <label>Trẻ em đi kèm (6-10t): 1.55tr</label>
-                    <input type="number" id="child" value="0" min="0">
-                </div>
-                <p class="note">* Phòng gia đình: Được xếp phòng riêng (vợ chồng/người thân).</p>
-            </div>
-
-            <div class="total-section">
-                Tổng tiền: <span id="money" data-value="0">0</span> đ
-            </div>
-            
-            <button onclick="register()" class="btn-submit">XÁC NHẬN ĐĂNG KÝ</button>
+        <div id="mateBox" style="display:none;" class="border p-3 rounded mb-3">
+            <label class="form-label">Tìm đồng nghiệp ở chung (tối đa 2 người):</label>
+            <input type="text" id="mateSearch" class="form-control">
+            <div id="mateResult"></div>
+            <div id="mateList"></div>
         </div>
+
+        <div id="familyFields" style="display:none;" class="border p-3 rounded mb-3 bg-light">
+            <label class="form-label text-success"><b>Người thân cùng công ty (nếu có - tối đa 2):</b></label>
+            <input type="text" id="familyMateSearch" class="form-control" placeholder="Tìm tên/mã người thân...">
+            <div id="familyMateResult"></div>
+            <div id="selectedFamilyMate"></div>
+            
+            <label class="form-label mt-2">Người thân ngoài công ty ($3.1$tr):</label>
+            <input type="number" id="adult" class="form-control" value="0" min="0">
+            
+            <label class="form-label mt-2">Trẻ em đi kèm 6-10t ($1.55$tr):</label>
+            <input type="number" id="child" class="form-control" value="0" min="0">
+        </div>
+
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <b>TỔNG TIỀN:</b>
+            <h4 class="mb-0 text-danger" id="money" data-value="0">0 đ</h4>
+        </div>
+
+        <button class="btn btn-success w-100 btn-submit" onclick="register()">XÁC NHẬN ĐĂNG KÝ</button>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
