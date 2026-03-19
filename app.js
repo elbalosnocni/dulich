@@ -243,43 +243,40 @@ window.register = async function() {
 
 // Hàm hiển thị thông tin sau khi đăng ký thành công
 function showSuccessInfo(roomType) {
-    // 1. Ẩn tất cả các phần tử nhập liệu bên trong card (trừ successCard)
-    const cardChildren = document.querySelectorAll(".card > :not(#successCard)").style.display = "none";
-    cardChildren.forEach(el => el.style.display = "none");
-
-    // 2. Hiển thị card thành công
-    const successCard = document.getElementById("successCard");
-    const summary = document.getElementById("summaryContent");
-    successCard.style.display = "block";
-
-    // 3. Chuẩn bị nội dung hiển thị
-    let roomText = roomType === "auto" ? "Ghép tự động" : (roomType === "manual" ? "Chọn người ở cùng" : "Ở với gia đình");
+    // 1. Tìm cái card chính chứa toàn bộ nội dung
+    const mainCard = document.querySelector(".card.p-4");
     
-    let detailHTML = `
-        <div class="p-3 bg-light rounded border">
-            <p class="mb-1"><b>Mã NV:</b> ${currentNV.ma}</p>
-            <p class="mb-1"><b>Họ tên:</b> ${currentNV.ten}</p>
-            <p class="mb-1"><b>Giới tính:</b> ${currentNV.gioitinh}</p>
-            <p class="mb-1"><b>Hình thức:</b> ${roomText}</p>
-            <hr class="my-2">
-    `;
+    // 2. Lấy nội dung tóm tắt trước khi xóa form
+    let roomText = "";
+    if (roomType === "auto") roomText = "Ghép tự động";
+    else if (roomType === "manual") roomText = "Chọn người ở cùng";
+    else roomText = "Ở với gia đình";
 
-    if (roomType === "manual" && mates.length > 0) {
-        detailHTML += `<p class="mb-1 text-primary"><b>Bạn ở cùng:</b> ${mates.map(m => m.ten).join(", ")}</p>`;
-    }
+    const finalMoney = document.getElementById("money").innerText;
 
-    if (roomType === "family") {
-        if (familyMates.length > 0) detailHTML += `<p class="mb-1 text-success"><b>Người thân CT:</b> ${familyMates.map(m => m.ten).join(", ")}</p>`;
-        if (elAdult.value > 0) detailHTML += `<p class="mb-1"><b>Người lớn (ngoài):</b> ${elAdult.value}</p>`;
-        if (elChild.value > 0) detailHTML += `<p class="mb-1"><b>Trẻ em:</b> ${elChild.value}</p>`;
-    }
-
-    detailHTML += `
-            <hr class="my-2">
-            <h4 class="text-danger text-center mb-0">TỔNG: ${elMoney.innerText}</h4>
+    // 3. XÓA SẠCH nội dung bên trong card để tránh bị lẫn form cũ
+    mainCard.innerHTML = `
+        <div id="successCard" class="text-center" style="animation: fadeIn 0.6s ease-in-out;">
+            <h3 class="text-success mb-3">🎉 ĐĂNG KÝ THÀNH CÔNG!</h3>
+            <p class="text-muted">Vui lòng chụp màn hình thông tin dưới đây:</p>
+            <hr>
+            <div class="text-start p-3 bg-light rounded border" style="border-style: dashed !important; border-color: #28a745 !important;">
+                <p class="mb-2"><b>Mã nhân viên:</b> ${currentNV.ma}</p>
+                <p class="mb-2"><b>Họ tên:</b> ${currentNV.ten}</p>
+                <p class="mb-2"><b>Hình thức phòng:</b> ${roomText}</p>
+                
+                ${mates.length > 0 ? `<p class="mb-2 text-primary"><b>Bạn ở cùng:</b> ${mates.map(m => m.ten).join(", ")}</p>` : ""}
+                
+                ${familyMates.length > 0 ? `<p class="mb-2 text-success"><b>Người thân CT:</b> ${familyMates.map(m => m.ten).join(", ")}</p>` : ""}
+                
+                ${document.getElementById("adult").value > 0 ? `<p class="mb-2"><b>Người lớn ngoài:</b> ${document.getElementById("adult").value}</p>` : ""}
+                ${document.getElementById("child").value > 0 ? `<p class="mb-2"><b>Trẻ em:</b> ${document.getElementById("child").value}</p>` : ""}
+                
+                <hr class="my-2">
+                <h4 class="text-danger text-center mb-0">TỔNG TIỀN: ${finalMoney}</h4>
+            </div>
+            <p class="small text-center text-muted mt-3">Thời gian: ${new Date().toLocaleString('vi-VN')}</p>
+            <button class="btn btn-outline-secondary w-100 mt-3" onclick="location.reload()">ĐĂNG KÝ MỚI</button>
         </div>
-        <p class="text-center mt-3 small text-muted"><i>Vui lòng chụp màn hình để đối chiếu khi cần thiết.</i><br>Thời gian: ${new Date().toLocaleString('vi-VN')}</p>
     `;
-
-    summary.innerHTML = detailHTML;
 }
