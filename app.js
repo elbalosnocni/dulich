@@ -243,37 +243,42 @@ window.register = async function() {
 
 // Hàm hiển thị thông tin sau khi đăng ký thành công
 function showSuccessInfo(roomType) {
-    // Ẩn form đăng ký
-    document.querySelector(".card.p-4").style.display = "none";
-    
-    // Hiển thị card thành công
+    // 1. Ẩn tất cả các phần tử nhập liệu bên trong card (trừ successCard)
+    const cardChildren = document.querySelectorAll(".card.p-4 > *:not(#successCard)");
+    cardChildren.forEach(el => el.style.display = "none");
+
+    // 2. Hiển thị card thành công
     const successCard = document.getElementById("successCard");
     const summary = document.getElementById("summaryContent");
     successCard.style.display = "block";
 
+    // 3. Chuẩn bị nội dung hiển thị
     let roomText = roomType === "auto" ? "Ghép tự động" : (roomType === "manual" ? "Chọn người ở cùng" : "Ở với gia đình");
     
     let detailHTML = `
-        <p><b>Mã nhân viên:</b> ${currentNV.ma}</p>
-        <p><b>Họ tên:</b> ${currentNV.ten}</p>
-        <p><b>Giới tính:</b> ${currentNV.gioitinh}</p>
-        <p><b>Hình thức phòng:</b> ${roomText}</p>
+        <div class="p-3 bg-light rounded border">
+            <p class="mb-1"><b>Mã NV:</b> ${currentNV.ma}</p>
+            <p class="mb-1"><b>Họ tên:</b> ${currentNV.ten}</p>
+            <p class="mb-1"><b>Giới tính:</b> ${currentNV.gioitinh}</p>
+            <p class="mb-1"><b>Hình thức:</b> ${roomText}</p>
+            <hr class="my-2">
     `;
 
     if (roomType === "manual" && mates.length > 0) {
-        detailHTML += `<p><b>Bạn ở cùng:</b> ${mates.map(m => m.ten).join(", ")}</p>`;
+        detailHTML += `<p class="mb-1 text-primary"><b>Bạn ở cùng:</b> ${mates.map(m => m.ten).join(", ")}</p>`;
     }
 
     if (roomType === "family") {
-        if (familyMates.length > 0) detailHTML += `<p><b>Người thân (Cùng CT):</b> ${familyMates.map(m => m.ten).join(", ")}</p>`;
-        if (elAdult.value > 0) detailHTML += `<p><b>Người lớn (Ngoài CT):</b> ${elAdult.value}</p>`;
-        if (elChild.value > 0) detailHTML += `<p><b>Trẻ em:</b> ${elChild.value}</p>`;
+        if (familyMates.length > 0) detailHTML += `<p class="mb-1 text-success"><b>Người thân CT:</b> ${familyMates.map(m => m.ten).join(", ")}</p>`;
+        if (elAdult.value > 0) detailHTML += `<p class="mb-1"><b>Người lớn (ngoài):</b> ${elAdult.value}</p>`;
+        if (elChild.value > 0) detailHTML += `<p class="mb-1"><b>Trẻ em:</b> ${elChild.value}</p>`;
     }
 
     detailHTML += `
-        <hr>
-        <h4 class="text-danger text-center">TỔNG TIỀN: ${elMoney.innerText}</h4>
-        <p class="small text-center mt-2 italic">* Thời gian đăng ký: ${new Date().toLocaleString('vi-VN')}</p>
+            <hr class="my-2">
+            <h4 class="text-danger text-center mb-0">TỔNG: ${elMoney.innerText}</h4>
+        </div>
+        <p class="text-center mt-3 small text-muted"><i>Vui lòng chụp màn hình để đối chiếu khi cần thiết.</i><br>Thời gian: ${new Date().toLocaleString('vi-VN')}</p>
     `;
 
     summary.innerHTML = detailHTML;
