@@ -112,22 +112,34 @@ window.removeMate = function(index) {
 };
 
 // --- 4. TÍNH TIỀN ---
+let familyMate = null; // Lưu thông tin người thân cùng công ty
+
+// Hàm tính tiền cập nhật
 function calculatePrice() {
     if (!currentNV) return;
 
-    const adultCount = parseInt(elAdult.value) || 0; // Gom chung người lớn và người thân vào đây
-    const childCount = parseInt(elChild.value) || 0;
+    // 4.1. Suất của nhân viên chính
+    let total = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
 
-    // Suất gốc nhân viên (Có CĐ: 1.1tr, Không CĐ: 2.1tr)
-    let basePrice = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
+    // 4.2. Nếu có người thân cùng công ty
+    if (familyMate) {
+        let matePrice = (familyMate.congdoan === "Có") ? 1100000 : 2100000;
+        total += matePrice;
+    }
+
+    // 4.3. Người thân ngoài công ty & trẻ em
+    const adultCount = parseInt(elAdult.value) || 0;
+    const childCount = parseInt(elChild.value) || 0;
     
-    // Tổng tiền mới
-    let total = basePrice + (adultCount * 3100000) + (childCount * 1550000);
+    total += (adultCount * 3100000) + (childCount * 1550000);
 
     elMoney.innerText = total.toLocaleString('vi-VN') + " đ";
     elMoney.dataset.value = total;
 }
-[elAdult, elChild, elFamily].forEach(input => input.oninput = calculatePrice);
+
+// Logic khi chọn người thân trong mục Gia đình
+// (Tương tự như phần tìm kiếm đồng nghiệp bạn đã viết, nhưng gán vào biến familyMate)
+[elAdult, elChild].forEach(input => input.oninput = calculatePrice);
 
 // --- 5. GỬI ĐĂNG KÝ ---
 window.register = async function() {
@@ -153,7 +165,6 @@ window.register = async function() {
         congdoan: currentNV.congdoan,
         adult: elAdult.value,
         child: elChild.value,
-        family: elFamily.value,
         total: elMoney.dataset.value,
         roomType: roomType,
         mates: JSON.stringify(mates)
