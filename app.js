@@ -143,7 +143,24 @@ elFamilyMateResult.onclick = function(e) {
         return;
     }
 
-    familyMate = n; // Gán vào biến global đã khai báo
+    // Không cho trùng
+    if (familyMates.some(m => m.ma === n.ma)) {
+        alert("Người này đã được chọn!");
+        return;
+    }
+    
+    familyMates.push(n);
+    renderFamilyMates();
+
+    // Thêm hàm hiển thị danh sách
+    function renderFamilyMates() {
+    elSelectedFamilyMate.innerHTML = familyMates.map((m, i) => `
+        <div style="background:#f1f8e9; padding:5px 10px; margin:5px 0; border-radius:5px; display:flex; justify-content:space-between; border:1px solid #8bc34a">
+            <span>👤 ${m.ten} (${m.ma})</span>
+            <span onclick="removeFamilyMate(${i})" style="color:red; cursor:pointer;">×</span>
+        </div>
+    `).join("");
+}
     
     // Hiển thị người đã chọn lên giao diện
     elSelectedFamilyMate.innerHTML = `
@@ -158,15 +175,16 @@ elFamilyMateResult.onclick = function(e) {
 };
 
 // Hàm gỡ bỏ người thân đã chọn
-window.removeFamilyMate = function() {
-    familyMate = null;
-    elSelectedFamilyMate.innerHTML = "";
+window.removeFamilyMate = function(index) {
+    familyMates.splice(index, 1);
+    renderFamilyMates();
     calculatePrice();
 };
 
 // --- 5. TÍNH TIỀN ---
 //  Biến lưu trữ danh sách người thân cùng công ty
 let familyMates = [];
+    elSelectedFamilyMate.innerHTML = "";
 // Hàm tính tiền cập nhật
 function calculatePrice() {
     if (!currentNV) return;
