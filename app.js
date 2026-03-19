@@ -28,17 +28,33 @@ window.selectMainNV = function(n) {
 };
 
 // --- CHẾ ĐỘ PHÒNG ---
-document.querySelectorAll("input[name=roomType]").forEach(r => {
-    r.onchange = () => {
-        document.getElementById("mateBox").style.display = (r.value === "manual") ? "block" : "none";
-        document.getElementById("familyFields").style.display = (r.value === "family") ? "block" : "none";
-        if (r.value !== "family") { familyMates = []; elAdult.value = 0; elChild.value = 0; }
-        checkLimit(); // Khóa các ô nhập khác nếu cần
-        calculatePrice();
-    };
-});
+// --- 2. TÌM ĐỒNG NGHIỆP Ở CHUNG (CHẾ ĐỘ MANUAL) ---
+document.getElementById("mateSearch").oninput = async function() {
+    const q = this.value.trim();
+    if (q.length < 2) { document.getElementById("mateResult").innerHTML = ""; return; }
+    const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    document.getElementById("mateResult").innerHTML = data.map(n => `<div class="item-search" onclick='addMate(${JSON.stringify(n)})'>${n.ten} (${n.ma})</div>`).join("");
+};
 
-// --- TÌM NGƯỜI THÂN CÙNG CÔNG TY ---
+window.addMate = function(n) {
+    if (mates.length >= 2) return alert("Phòng 3 người, bạn chỉ được chọn thêm 2 đồng nghiệp!");
+    if (currentNV && n.ma === currentNV.ma) return alert("Không thể chọn chính mình!");
+    if (mates.some(m => m.ma === n.ma)) return alert("Đồng nghiệp này đã được chọn!");
+    
+    mates.push(n);
+    document.getElementById("mateSearch").value = "";
+    document.getElementById("mateResult").innerHTML = "";
+    renderMates();
+};
+
+function renderMates() {
+    document.getElementById("mateList").innerHTML = mates.map((m, i) => 
+        `<div class="family-badge">👤 ${m.ten} <span class="remove-btn" onclick="mates.splice(${i},1);renderMates();">×</span></div>`
+    ).join("");
+}
+
+// --- TÌM NGƯỜI THÂN CÙNG CÔNG TY (CHẾ ĐỘ FAMILY) ---
 document.getElementById("familyMateSearch").oninput = async function() {
     const q = this.value.trim();
     if (q.length < 2) { document.getElementById("familyMateResult").innerHTML = ""; return; }
@@ -100,7 +116,6 @@ function checkLimit() {
     
     // Tổng số nhân viên hiện tại = 1 (chính) + số lượng familyMates
     const currentStaffCount = 1 + familyMates.length;
-
     if (currentStaffCount >= 3) {
         // Nếu đã đủ 3 nhân viên, khóa các ô nhập người ngoài và trẻ em
         adultInput.value = 0;
