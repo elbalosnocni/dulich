@@ -28,12 +28,48 @@ window.selectMainNV = function(n) {
 };
 
 // --- CHẾ ĐỘ PHÒNG ---
-// --- 2. TÌM ĐỒNG NGHIỆP Ở CHUNG (CHẾ ĐỘ MANUAL) ---
+    const roomRadios = document.querySelectorAll("input[name=roomType]");
+
+roomRadios.forEach(r => {
+    r.onchange = () => {
+        // Reset dữ liệu mảng
+        mates = [];
+        familyMates = [];
+
+        // Reset hiển thị giao diện
+        document.getElementById("mateList").innerHTML = "";
+        document.getElementById("selectedFamilyMate").innerHTML = "";
+        elAdult.value = 0;
+        elChild.value = 0;
+
+        // --- ĐIỀU KHIỂN ẨN HIỆN CÁC KHUNG TÌM KIẾM ---
+        const mateBox = document.getElementById("mateBox");
+        const familyFields = document.getElementById("familyFields");
+
+        if (r.value === "manual") {
+            mateBox.style.display = "block";
+            familyFields.style.display = "none";
+        } else if (r.value === "family") {
+            mateBox.style.display = "none";
+            familyFields.style.display = "block";
+        } else {
+            mateBox.style.display = "none";
+            familyFields.style.display = "none";
+        }
+
+        checkLimit();
+        calculatePrice();
+    };
+});
+
+// --- . TÌM ĐỒNG NGHIỆP Ở CHUNG (CHẾ ĐỘ MANUAL) ---
 document.getElementById("mateSearch").oninput = async function() {
     const q = this.value.trim();
     if (q.length < 2) { document.getElementById("mateResult").innerHTML = ""; return; }
     const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
     const data = await res.json();
+    
+    // Hiện danh sách tìm kiếm đồng nghiệp
     document.getElementById("mateResult").innerHTML = data.map(n => `<div class="item-search" onclick='addMate(${JSON.stringify(n)})'>${n.ten} (${n.ma})</div>`).join("");
 };
 
@@ -47,7 +83,7 @@ window.addMate = function(n) {
     document.getElementById("mateResult").innerHTML = "";
     renderMates();
 };
-
+//
 function renderMates() {
     document.getElementById("mateList").innerHTML = mates.map((m, i) => 
         `<div class="family-badge">👤 ${m.ten} <span class="remove-btn" onclick="mates.splice(${i},1);renderMates();">×</span></div>`
@@ -95,25 +131,6 @@ window.removeFamilyMate = function(i) {
     checkLimit(); // Khóa các ô nhập khác nếu cần
     calculatePrice();
 };
-
-// reset dữ liệu khi đổi chế độ phòng
-const roomRadios = document.querySelectorAll("input[name=roomType]");
-
-roomRadios.forEach(r => {
-    r.onchange = () => {
-        mates = [];
-        familyMates = [];
-
-        document.getElementById("mateList").innerHTML = "";
-        document.getElementById("selectedFamilyMate").innerHTML = "";
-
-        elAdult.value = 0;
-        elChild.value = 0;
-
-        checkLimit();
-        calculatePrice();
-    };
-});
 
 // --- TÍNH TIỀN ---
 function calculatePrice() {
