@@ -74,6 +74,14 @@ document.getElementById("mateSearch").oninput = async function() {
 };
 
 window.addMate = function(n) {
+    if (!currentNV) return alert("Vui lòng chọn nhân viên chính trước!");
+    
+    // --- KHỐI CHẶN GIỚI TÍNH ---
+    if (n.gioitinh !== currentNV.gioitinh) {
+        return alert(`Lỗi: Không thể chọn người khác giới tính! \n(Bạn là ${currentNV.gioitinh}, đồng nghiệp là ${n.gioitinh})`);
+    }
+    // ---------------------------
+    
     if (mates.length >= 2) return alert("Phòng 3 người, bạn chỉ được chọn thêm 2 đồng nghiệp!");
     if (currentNV && n.ma === currentNV.ma) return alert("Không thể chọn chính mình!");
     if (mates.some(m => m.ma === n.ma)) return alert("Đồng nghiệp này đã được chọn!");
