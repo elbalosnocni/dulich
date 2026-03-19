@@ -165,7 +165,8 @@ window.removeFamilyMate = function() {
 };
 
 // --- 5. TÍNH TIỀN ---
-
+//  Biến lưu trữ danh sách người thân cùng công ty
+let familyMates = [];
 // Hàm tính tiền cập nhật
 function calculatePrice() {
     if (!currentNV) return;
@@ -173,16 +174,15 @@ function calculatePrice() {
     // 5.1. Suất của nhân viên chính
     let total = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
 
-    // 5.2. Nếu có người thân cùng công ty
-    if (familyMate) {
-        let matePrice = (familyMate.congdoan === "Có") ? 1100000 : 2100000;
-        total += matePrice;
-    }
+    // 5.2. Nếu có người thân cùng công ty Cộng tiền từng người thân cùng công ty (1.1tr hoặc 2.1tr)
+    familyMates.forEach(m => {
+        total += (m.congdoan === "Có") ? 1100000 : 2100000;
+    });
 
     // 5.3. Người thân ngoài công ty & trẻ em
+    // Người thân ngoài và trẻ em
     const adultCount = parseInt(elAdult.value) || 0;
     const childCount = parseInt(elChild.value) || 0;
-    
     total += (adultCount * 3100000) + (childCount * 1550000);
 
     elMoney.innerText = total.toLocaleString('vi-VN') + " đ";
@@ -219,8 +219,8 @@ window.register = async function() {
         total: elMoney.dataset.value,
         roomType: roomType,
         // Gửi thông tin familyMate để Code.gs biết có người thân trong cty
-        familyMate: (roomType === "family" && familyMate) ? JSON.stringify(familyMate) : "",
-        mates: (roomType === "family" && familyMate) ? JSON.stringify([familyMate]) : JSON.stringify(mates)
+        familyMate: JSON.stringify(familyMates),
+        mates: JSON.stringify(mates)
     });
 
     try {
