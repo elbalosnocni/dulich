@@ -1,95 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng ký Du lịch 2026</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <style>
-        body { background: #f4f7f6; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card { max-width: 650px; margin: auto; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; }
-        .search-results { position: absolute; width: 100%; z-index: 1000; background: white; border: 1px solid #ddd; border-top: none; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .item-search, .item-mate, .item-family-mate { padding: 12px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: 0.2s; }
-        .item-search:hover { background: #e3f2fd; color: #1976d2; }
-        .selected-badge { background: #e3f2fd; color: #1976d2; padding: 8px 15px; border-radius: 20px; display: inline-block; margin-top: 10px; font-weight: 600; }
-        .family-badge { background: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 15px; display: inline-flex; align-items: center; margin: 4px; border: 1px solid #c8e6c9; }
-        .remove-btn { margin-left: 8px; cursor: pointer; color: #c62828; font-weight: bold; }
-    </style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Du lịch công ty</title>
+
+<style>
+body{margin:0;font-family:sans-serif;background:#f0f2f5}
+.header{background:#0d47a1;color:#fff;padding:15px;text-align:center;font-size:18px}
+.box{background:#fff;margin:10px;padding:12px;border-radius:12px}
+input,select{width:100%;padding:12px;margin-top:6px;border-radius:8px;border:1px solid #ccc}
+button{width:100%;padding:14px;background:#0d47a1;color:#fff;border:none;border-radius:10px;margin-top:10px}
+.card{padding:10px;border-bottom:1px solid #eee}
+.tag{display:inline-block;background:#eee;padding:4px 8px;border-radius:6px;margin:2px}
+</style>
 </head>
+
 <body>
-    <div class="card p-4">
-        <h3 class="text-center mb-4 text-primary">ĐĂNG KÝ DU LỊCH 2026</h3>
-        
-        <div class="mb-4 position-relative">
-            <label class="form-label"><b>1. Tìm tên hoặc mã nhân viên chính:</b></label>
-            <input type="text" id="search" class="form-control" placeholder="Nhập tên hoặc mã NV..." autocomplete="off">
-            <div id="result" class="search-results"></div>
-            <div id="selected-nv"></div>
-        </div>
 
-        <hr>
+<div class="header">Đăng ký du lịch công ty</div>
 
-        <label class="form-label"><b>2. Chọn hình thức phòng:</b></label>
-        <div class="mb-4 d-flex justify-content-between">
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="roomType" id="r1" value="auto" checked>
-                <label class="form-check-label" for="r1">Ghép tự động</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="roomType" id="r2" value="manual">
-                <label class="form-check-label" for="r2">Chọn người ở cùng</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="roomType" id="r3" value="family">
-                <label class="form-check-label" for="r3">Ở với gia đình</label>
-            </div>
-        </div>
+<div class="box">
+<input id="kw" placeholder="Tìm tên..." oninput="search()">
+<div id="list"></div>
+</div>
 
-        <div id="mateBox" style="display:none;" class="border p-3 rounded mb-3 bg-light">
-            <label class="form-label">Tìm đồng nghiệp ở chung (Phòng 3 người):</label>
-            <div class="position-relative">
-                <input type="text" id="mateSearch" class="form-control" placeholder="Tìm tên/mã bạn..." autocomplete="off">
-                <div id="mateResult" class="search-results"></div>
-            </div>
-            <div id="mateList" class="mt-2"></div>
-        </div>
+<div class="box">
+<select id="type" onchange="renderFamily()">
+<option value="tap_the">Phòng 3 người</option>
+<option value="gia_dinh">Phòng gia đình</option>
+</select>
+</div>
 
-        <div id="familyFields" style="display:none;" class="border p-3 rounded mb-3 bg-light text-success border-success">
-            <label class="form-label"><b>Người thân cùng công ty (Tối đa 2):</b></label>
-            <div class="position-relative mb-2">
-                <input type="text" id="familyMateSearch" class="form-control" placeholder="Tìm tên/mã người thân..." autocomplete="off">
-                <div id="familyMateResult" class="search-results"></div>
-            </div>
-            <div id="selectedFamilyMate"></div>
-            
-            <div class="row mt-3">
-                <div class="col-6">
-                    <label class="form-label small">Người thân ngoài CT (3.1tr):</label>
-                    <input type="number" id="adult" class="form-control" value="0" min="0">
-                </div>
-                <div class="col-6">
-                    <label class="form-label small">Trẻ em 6-10t (1.55tr):</label>
-                    <input type="number" id="child" class="form-control" value="0" min="0">
-                </div>
-            </div>
-        </div>
+<div class="box" id="familyBox"></div>
 
-        <div class="alert alert-primary d-flex justify-content-between align-items-center py-2">
-            <b>TỔNG TIỀN:</b>
-            <h4 class="mb-0 text-danger" id="money" data-value="0">0 đ</h4>
-        </div>
+<div class="box">
+<div id="cost">Chi phí: 0 đ</div>
+<button onclick="preview()">Xem lại</button>
+</div>
 
-        <button class="btn btn-primary w-100 py-2 btn-submit fw-bold" onclick="register()">XÁC NHẬN ĐĂNG KÝ</button>
+<div class="box" id="preview"></div>
 
-        <div id="successCard" class="card p-4 mt-3 text-center" style="display:none; border: 2px solid #28a745;">
-            <h3 class="text-success">🎉 ĐĂNG KÝ THÀNH CÔNG!</h3>
-            <p class="text-muted">Vui lòng chụp màn hình thông tin dưới đây:</p>
-            <hr>
-            <div id="summaryContent" class="text-start">
-                </div>
-            <button class="btn btn-outline-secondary mt-3" onclick="location.reload()">Đăng ký mới</button>
-        </div>
-    </div>
-    <script src="app.js"></script>
+<script>
+const API="LINK_APPS_SCRIPT";
+
+let nv=null;
+let family=[];
+
+// SEARCH
+async function search(){
+  let r=await fetch(API+"?action=search&kw="+kw.value);
+  let d=await r.json();
+
+  list.innerHTML=d.map(x=>
+    `<div class="card" onclick='pick(${JSON.stringify(x)})'>
+      ${x[2]} (${x[0]})
+    </div>`).join("");
+}
+
+function pick(x){
+  nv=x;
+  calc();
+}
+
+// FAMILY UI
+function renderFamily(){
+  if(type.value!="gia_dinh"){
+    familyBox.innerHTML="";
+    return;
+  }
+
+  familyBox.innerHTML=`
+  <button onclick="add()">+ Thêm người thân</button>
+  <div id="famList"></div>
+  `;
+}
+
+function add(){
+  let name=prompt("Tên:");
+  let tuoi=prompt("Tuổi:");
+
+  family.push({name,tuoi:Number(tuoi)});
+  drawFam();
+  calc();
+}
+
+function drawFam(){
+  famList.innerHTML=family.map(p=>
+    `<div class="tag">${p.name} (${p.tuoi})</div>`
+  ).join("");
+}
+
+// COST
+function calc(){
+  if(!nv) return;
+
+  let t = nv[7]=="Có"?1100000:2100000;
+
+  family.forEach(p=>{
+    t += p.tuoi>=11?3100000:1550000;
+  });
+
+  cost.innerText="Chi phí: "+t.toLocaleString()+" đ";
+}
+
+// PREVIEW
+function preview(){
+  if(!nv) return alert("Chọn NV");
+
+  preview.innerHTML=`
+  <b>${nv[2]}</b><br>
+  Mã NV: ${nv[0]}<br>
+  <button onclick="submit()">Xác nhận đăng ký</button>
+  `;
+}
+
+// SUBMIT
+async function submit(){
+  let body={
+    maNV:nv[0],
+    ten:nv[2],
+    gioiTinh:nv[3],
+    congDoan:nv[7],
+    loaiPhong:type.value,
+    family,
+    treEm:family.filter(x=>x.tuoi<11).length
+  };
+
+  let r=await fetch(API,{method:"POST",body:JSON.stringify(body)});
+  let d=await r.json();
+
+  if(d.status){
+    alert("Thành công - "+d.cost.toLocaleString());
+    location.reload();
+  }else alert(d.msg);
+}
+</script>
+
 </body>
 </html>
