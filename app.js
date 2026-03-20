@@ -28,20 +28,7 @@ window.selectMainNV = function(n) {
     calculatePrice();
 };
 
-// --- CHẾ ĐỘ PHÒNG ---
-document.querySelectorAll("input[name=roomType]").forEach(r => {
-    r.onchange = () => {
-        mates = []; familyMates = [];
-        document.getElementById("mateList").innerHTML = "";
-        document.getElementById("selectedFamilyMate").innerHTML = "";
-        elAdult.value = 0; elChild.value = 0;
-        document.getElementById("mateBox").style.display = r.value === "manual" ? "block" : "none";
-        document.getElementById("familyFields").style.display = r.value === "family" ? "block" : "none";
-        calculatePrice();
-    };
-});
-
-// --- TÌM ĐỒNG NGHIỆP / NGƯỜI THÂN ---
+// --- CHỌN BẠN / NGƯỜI THÂN ---
 async function searchSub(idInput, idResult, callbackName) {
     const q = document.getElementById(idInput).value.trim();
     if (q.length < 2) { document.getElementById(idResult).innerHTML = ""; return; }
@@ -68,7 +55,19 @@ window.addFamilyMate = function(n) {
     calculatePrice();
 };
 
-// --- TÍNH TIỀN ---
+// --- CHẾ ĐỘ PHÒNG ---
+document.querySelectorAll("input[name=roomType]").forEach(r => {
+    r.onchange = () => {
+        mates = []; familyMates = [];
+        document.getElementById("mateList").innerHTML = "";
+        document.getElementById("selectedFamilyMate").innerHTML = "";
+        elAdult.value = 0; elChild.value = 0;
+        document.getElementById("mateBox").style.display = r.value === "manual" ? "block" : "none";
+        document.getElementById("familyFields").style.display = r.value === "family" ? "block" : "none";
+        calculatePrice();
+    };
+});
+
 function calculatePrice() {
     if (!currentNV) return;
     let total = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
@@ -80,7 +79,7 @@ function calculatePrice() {
 }
 [elAdult, elChild].forEach(el => el.oninput = calculatePrice);
 
-// --- ĐĂNG KÝ (SỬA TÊN THAM SỐ KHỚP VỚI CỘT EXCEL) ---
+// --- ĐĂNG KÝ ---
 window.register = async function() {
     if (!currentNV) return alert("Vui lòng chọn nhân viên chính!");
     const btn = document.querySelector(".btn-submit");
@@ -88,30 +87,26 @@ window.register = async function() {
 
     const roomType = document.querySelector("input[name=roomType]:checked").value;
     
-    // Đặt tên key TRÙNG KHỚP với tên cột trong Sheets của bạn
     const params = new URLSearchParams({
         action: "register",
         ma: currentNV.ma,
         ten: currentNV.ten,
         gioitinh: currentNV.gioitinh,
-        //"NGUOI THAN NGOAI CTY": elAdult.value,
-        //"TREEM": elChild.value,
+        congdoan: currentNV.congdoan,
         adult: elAdult.value,
         child: elChild.value,
-        "NGUOI THAN CUNG CTY": familyMates.map(m => m.ten).join(", "),
-        "TOTAL": elMoney.dataset.value,
-        "HINH THUC PHONG": roomType === "auto" ? "Ghép tự động" : (roomType === "manual" ? "Chọn bạn" : "Gia đình"),
-        "DANH SACH BAN O CUNG": mates.map(m => m.ten).join(", ")
+        total: elMoney.dataset.value,
+        roomType: roomType,
+        mates: JSON.stringify(mates),
+        familyMate: JSON.stringify(familyMates)
     });
 
     try {
         const res = await fetch(`${API_URL}?${params.toString()}`);
         const text = await res.text();
-        if (text === "SUCCESS") {
-            showSuccessInfo();
-        } else {
-            alert("Lỗi server: " + text);
-        }
+        if (text === "SUCCESS") showSuccessInfo();
+        else if (text === "EXIST") alert("Nhân viên này đã đăng ký rồi!");
+        else alert("Lỗi: " + text);
     } catch (e) {
         alert("Lỗi kết nối mạng!");
     } finally {
@@ -120,19 +115,14 @@ window.register = async function() {
 };
 
 function showSuccessInfo() {
-    const mainContent = document.getElementById("main-content");
-    mainContent.innerHTML = `
-        <div class="text-center" style="animation: fadeIn 0.6s ease-in-out;">
-            <div style="font-size: 60px;">✅</div>
-            <h3 class="text-success fw-bold">ĐĂNG KÝ THÀNH CÔNG!</h3>
-            <p class="text-muted">Vui lòng chụp ảnh màn hình để đối chiếu</p>
-            <div class="text-start p-3 bg-light border rounded mt-3" style="border-style: dashed !important; border-color: #28a745 !important;">
-                <p><b>Nhân viên:</b> ${currentNV.ten}</p>
+    document.getElementById("main-content").innerHTML = `
+        <div class="text-center">
+            <h2 class="text-success fw-bold">✅ ĐĂNG KÝ XONG!</h2>
+            <div class="text-start p-3 bg-light border rounded mt-3">
+                <p><b>Họ tên:</b> ${currentNV.ten}</p>
                 <p><b>Mã NV:</b> ${currentNV.ma}</p>
-                <p><b>Tổng tiền:</b> <span class="text-danger fw-bold">${elMoney.innerText}</span></p>
-                <p class="small text-muted mt-2 mb-0">Thời gian: ${new Date().toLocaleString('vi-VN')}</p>
+                <p><b>Tổng tiền:</b> <span class="text-danger">${elMoney.innerText}</span></p>
             </div>
             <button class="btn btn-primary w-100 mt-4" onclick="location.reload()">ĐĂNG KÝ MỚI</button>
-        </div>
-    `;
+        </div>`;
 }
