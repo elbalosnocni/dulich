@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec"; // Thay link vào đây
 
 let currentNV = null;
 let mates = [];
@@ -10,119 +10,233 @@ const elMoney = document.getElementById("money");
 const elAdult = document.getElementById("adult");
 const elChild = document.getElementById("child");
 
-// --- TÌM KIẾM ---
+// --- TÌM KIẾM NHÂN VIÊN CHÍNH ---
 elSearch.oninput = async function() {
     const q = this.value.trim();
     if (q.length < 2) { elResult.innerHTML = ""; return; }
-    try {
-        const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        elResult.innerHTML = data.map(n => `<div class="item-search" onclick='selectMainNV(${JSON.stringify(n)})'>${n.ten} (${n.ma})</div>`).join("");
-    } catch(e) { console.error("Lỗi tìm kiếm"); }
+    const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    elResult.innerHTML = data.map(n => `<div class="item-search" onclick='selectMainNV(${JSON.stringify(n)})'>${n.ten} (${n.ma}) - ${n.bophan}</div>`).join("");
 };
 
 window.selectMainNV = function(n) {
     currentNV = n;
-    elSearch.value = ""; elResult.innerHTML = "";
-    document.getElementById("selected-nv").innerHTML = `<div class="selected-badge">✅ ${n.ten} (${n.ma}) - CĐ: ${n.congdoan}</div>`;
-    calculatePrice();
-};
-
-// --- CHỌN BẠN / NGƯỜI THÂN ---
-async function searchSub(idInput, idResult, callbackName) {
-    const q = document.getElementById(idInput).value.trim();
-    if (q.length < 2) { document.getElementById(idResult).innerHTML = ""; return; }
-    const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
-    const data = await res.json();
-    document.getElementById(idResult).innerHTML = data.map(n => `<div class="item-search" onclick='${callbackName}(${JSON.stringify(n)})'>${n.ten} (${n.ma})</div>`).join("");
-}
-
-document.getElementById("mateSearch").oninput = () => searchSub("mateSearch", "mateResult", "addMate");
-document.getElementById("familyMateSearch").oninput = () => searchSub("familyMateSearch", "familyMateResult", "addFamilyMate");
-
-window.addMate = function(n) {
-    if (mates.length >= 2 || n.ma === currentNV?.ma) return;
-    mates.push(n);
-    document.getElementById("mateResult").innerHTML = "";
-    document.getElementById("mateList").innerHTML = mates.map((m,i) => `<div class="family-badge">${m.ten} <span class="remove-btn" onclick="mates.splice(${i},1);addMate()">×</span></div>`).join("");
-};
-
-window.addFamilyMate = function(n) {
-    if (familyMates.length >= 2 || n.ma === currentNV?.ma) return;
-    familyMates.push(n);
-    document.getElementById("familyMateResult").innerHTML = "";
-    document.getElementById("selectedFamilyMate").innerHTML = familyMates.map((m,i) => `<div class="family-badge">${m.ten} <span class="remove-btn" onclick="familyMates.splice(${i},1);addFamilyMate()">×</span></div>`).join("");
+    elSearch.value = ""; // Xóa text ô tìm kiếm
+    elResult.innerHTML = ""; // XÓA DANH SÁCH GỢI Ý
+    document.getElementById("selected-nv").innerHTML = `<div class="selected-badge">✅ ${n.ten} (${n.ma}) - ${n.chucvu} ${n.bophan} - Công đoàn: ${n.congdoan}</div>`;
     calculatePrice();
 };
 
 // --- CHẾ ĐỘ PHÒNG ---
-document.querySelectorAll("input[name=roomType]").forEach(r => {
+    const roomRadios = document.querySelectorAll("input[name=roomType]");
+
+roomRadios.forEach(r => {
     r.onchange = () => {
-        mates = []; familyMates = [];
+        // Reset dữ liệu mảng
+        mates = [];
+        familyMates = [];
+
+        // Reset hiển thị giao diện
         document.getElementById("mateList").innerHTML = "";
         document.getElementById("selectedFamilyMate").innerHTML = "";
-        elAdult.value = 0; elChild.value = 0;
-        document.getElementById("mateBox").style.display = r.value === "manual" ? "block" : "none";
-        document.getElementById("familyFields").style.display = r.value === "family" ? "block" : "none";
+        elAdult.value = 0;
+        elChild.value = 0;
+
+        // --- ĐIỀU KHIỂN ẨN HIỆN CÁC KHUNG TÌM KIẾM ---
+        const mateBox = document.getElementById("mateBox");
+        const familyFields = document.getElementById("familyFields");
+
+        if (r.value === "manual") {
+            mateBox.style.display = "block";
+            familyFields.style.display = "none";
+        } else if (r.value === "family") {
+            mateBox.style.display = "none";
+            familyFields.style.display = "block";
+        } else {
+            mateBox.style.display = "none";
+            familyFields.style.display = "none";
+        }
+
+        checkLimit();
         calculatePrice();
     };
 });
 
+// --- . TÌM ĐỒNG NGHIỆP Ở CHUNG (CHẾ ĐỘ MANUAL) ---
+document.getElementById("mateSearch").oninput = async function() {
+    const q = this.value.trim();
+    if (q.length < 2) { document.getElementById("mateResult").innerHTML = ""; return; }
+    const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    
+    // Hiện danh sách tìm kiếm đồng nghiệp
+    document.getElementById("mateResult").innerHTML = data.map(n => `<div class="item-search" onclick='addMate(${JSON.stringify(n)})'>${n.ten} (${n.ma})</div>`).join("");
+};
+
+window.addMate = function(n) {
+    if (!currentNV) return alert("Vui lòng chọn nhân viên chính trước!");
+    
+    // --- KHỐI CHẶN GIỚI TÍNH ---
+    if (n.gioitinh !== currentNV.gioitinh) {
+        return alert(`Lỗi: Không thể chọn người khác giới tính! \n(Bạn là ${currentNV.gioitinh}, đồng nghiệp là ${n.gioitinh})`);
+    }
+    // ---------------------------
+    
+    if (mates.length >= 2) return alert("Phòng 3 người, bạn chỉ được chọn thêm 2 đồng nghiệp!");
+    if (currentNV && n.ma === currentNV.ma) return alert("Không thể chọn chính mình!");
+    if (mates.some(m => m.ma === n.ma)) return alert("Đồng nghiệp này đã được chọn!");
+    
+    mates.push(n);
+    document.getElementById("mateSearch").value = "";
+    document.getElementById("mateResult").innerHTML = "";
+    renderMates();
+};
+//
+function renderMates() {
+    document.getElementById("mateList").innerHTML = mates.map((m, i) => 
+        `<div class="family-badge">👤 ${m.ten} <span class="remove-btn" onclick="mates.splice(${i},1);renderMates();">×</span></div>`
+    ).join("");
+}
+
+// --- TÌM NGƯỜI THÂN CÙNG CÔNG TY (CHẾ ĐỘ FAMILY) ---
+document.getElementById("familyMateSearch").oninput = async function() {
+    const q = this.value.trim();
+    if (q.length < 2) { document.getElementById("familyMateResult").innerHTML = ""; return; }
+    const res = await fetch(`${API_URL}?action=search&q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    document.getElementById("familyMateResult").innerHTML = data.map(n => `<div class="item-family-mate" onclick='addFamilyMate(${JSON.stringify(n)})'>${n.ten} (${n.ma})</div>`).join("");
+};
+
+window.addFamilyMate = function(n) {
+    // Chặn không cho chọn thêm đồng nghiệp nếu đã lỡ nhập Adult/Child trước đó
+    const adultExt = parseInt(document.getElementById("adult").value) || 0;
+    const childExt = parseInt(document.getElementById("child").value) || 0;
+    if (familyMates.length >= 2) return alert("Tối đa chọn thêm 2 người thân cùng công ty!");
+    if (currentNV && n.ma === currentNV.ma) return alert("Không thể chọn chính mình!");
+    if (familyMates.some(m => m.ma === n.ma)) return alert("Người này đã được chọn!");
+    if (1 + familyMates.length + adultExt + childExt >= 3) {
+        alert("Phòng gia đình tối đa chỉ được 3 người (bao gồm cả trẻ em)!");
+        return;
+    }
+    
+    familyMates.push(n);
+    document.getElementById("familyMateSearch").value = ""; // Xóa text ô tìm kiếm
+    document.getElementById("familyMateResult").innerHTML = ""; // XÓA DANH SÁCH GỢI Ý
+    renderFamilyMates();
+    checkLimit(); // Khóa các ô nhập khác nếu cần
+    calculatePrice();
+};
+
+function renderFamilyMates() {
+    document.getElementById("selectedFamilyMate").innerHTML = familyMates.map((m, i) => 
+        `<div class="family-badge">👤 ${m.ten} <span class="remove-btn" onclick="removeFamilyMate(${i})">×</span></div>`
+    ).join("");
+}
+
+window.removeFamilyMate = function(i) {
+    familyMates.splice(i, 1);
+    renderFamilyMates();
+    checkLimit(); // Khóa các ô nhập khác nếu cần
+    calculatePrice();
+};
+
+// --- TÍNH TIỀN ---
 function calculatePrice() {
     if (!currentNV) return;
     let total = (currentNV.congdoan === "Có") ? 1100000 : 2100000;
-    familyMates.forEach(m => total += (m.congdoan === "Có" ? 1100000 : 2100000));
+    familyMates.forEach(m => {
+        total += (m.congdoan === "Có") ? 1100000 : 2100000;
+    });
     total += (parseInt(elAdult.value) || 0) * 3100000;
     total += (parseInt(elChild.value) || 0) * 1550000;
     elMoney.innerText = total.toLocaleString('vi-VN') + " đ";
     elMoney.dataset.value = total;
 }
-[elAdult, elChild].forEach(el => el.oninput = calculatePrice);
+function checkLimit() {
+    const adultInput = document.getElementById("adult");
+    const childInput = document.getElementById("child");
+    
+    // Tổng số nhân viên hiện tại = 1 (chính) + số lượng familyMates
+    const currentStaffCount = 1 + familyMates.length;
+    if (currentStaffCount >= 3) {
+        // Nếu đã đủ 3 nhân viên, khóa các ô nhập người ngoài và trẻ em
+        adultInput.value = 0;
+        childInput.value = 0;
+        adultInput.disabled = true;
+        childInput.disabled = true;
+        adultInput.placeholder = "Đã đủ 3 người (Tối đa)";
+        childInput.placeholder = "Đã đủ 3 người (Tối đa)";
+    } else {
+        // Nếu chưa đủ 3 người, cho phép nhập bình thường
+        adultInput.disabled = false;
+        childInput.disabled = false;
+        adultInput.placeholder = "";
+        childInput.placeholder = "";
+    }
+}
+
+// Gọi hàm checkLimit() này bên trong các hàm sau:
+// 1. Bên trong window.addFamilyMate sau khi push vào mảng.
+// 2. Bên trong window.removeFamilyMate sau khi splice mảng.
+// 3. Bên trong sự kiện r.onchange khi chọn chế độ phòng.
+
+//khi người dùng nhập số vào Adult/Child thì cũng phải kiểm tra xem có vượt quá tổng 3 người không
+[elAdult, elChild].forEach(el => {
+    el.oninput = function() {
+        const adultVal = parseInt(document.getElementById("adult").value) || 0;
+        const childVal = parseInt(document.getElementById("child").value) || 0;
+        const staffCount = 1 + familyMates.length;
+
+        if (staffCount + adultVal + childVal > 3) {
+            alert("Tổng số người trong phòng không được quá 3!");
+            this.value = 0; // Reset về 0 nếu nhập quá
+        }
+        calculatePrice();
+    };
+});
 
 // --- ĐĂNG KÝ ---
 window.register = async function() {
     if (!currentNV) return alert("Vui lòng chọn nhân viên chính!");
+
+    // Kiểm tra nếu chọn manual mà chưa có bạn
+    const roomType = document.querySelector("input[name=roomType]:checked").value;
+    if (roomType === "manual" && mates.length === 0) {
+    if (!confirm("Bạn chưa chọn bạn ở cùng, vẫn tiếp tục?")) return;
+    }
+
     const btn = document.querySelector(".btn-submit");
+    const originalText = btn.innerText;
     btn.disabled = true; btn.innerText = "ĐANG GỬI...";
 
-    const roomType = document.querySelector("input[name=roomType]:checked").value;
-    
     const params = new URLSearchParams({
         action: "register",
-        ma: currentNV.ma,
-        ten: currentNV.ten,
-        gioitinh: currentNV.gioitinh,
+        ma: currentNV.ma, 
+        ten: currentNV.ten, 
+        gioitinh: currentNV.gioitinh, 
         congdoan: currentNV.congdoan,
-        adult: elAdult.value,
-        child: elChild.value,
+        adult: elAdult.value, 
+        child: elChild.value, 
         total: elMoney.dataset.value,
         roomType: roomType,
-        mates: JSON.stringify(mates),
-        familyMate: JSON.stringify(familyMates)
+        familyMate: JSON.stringify(familyMates),
+        mates: JSON.stringify(mates)
     });
 
-    try {
+   try {
         const res = await fetch(`${API_URL}?${params.toString()}`);
         const text = await res.text();
-        if (text === "SUCCESS") showSuccessInfo();
-        else if (text === "EXIST") alert("Nhân viên này đã đăng ký rồi!");
-        else alert("Lỗi: " + text);
+
+        if (text === "EXIST") alert("Lỗi: Nhân viên đã đăng ký trước đó!");
+        else if (text === "CLOSED") alert("Hệ thống đã khóa đăng ký (hết hạn 27/03)!");
+        else {
+            alert("Chúc mừng! Bạn đã đăng ký thành công.");
+            location.reload();
+        }
     } catch (e) {
-        alert("Lỗi kết nối mạng!");
+        alert("Lỗi kết nối server. Vui lòng thử lại!");
     } finally {
-        btn.disabled = false; btn.innerText = "XÁC NHẬN ĐĂNG KÝ";
+        btn.innerText = originalText;
+        btn.disabled = false;
     }
 };
-
-function showSuccessInfo() {
-    document.getElementById("main-content").innerHTML = `
-        <div class="text-center">
-            <h2 class="text-success fw-bold">✅ ĐĂNG KÝ XONG!</h2>
-            <div class="text-start p-3 bg-light border rounded mt-3">
-                <p><b>Họ tên:</b> ${currentNV.ten}</p>
-                <p><b>Mã NV:</b> ${currentNV.ma}</p>
-                <p><b>Tổng tiền:</b> <span class="text-danger">${elMoney.innerText}</span></p>
-            </div>
-            <button class="btn btn-primary w-100 mt-4" onclick="location.reload()">ĐĂNG KÝ MỚI</button>
-        </div>`;
-}
