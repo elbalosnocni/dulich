@@ -1,25 +1,31 @@
-<!DOCTYPE html>
-<html>
+<h3>Dashboard</h3>
 
-<body>
+<button onclick="load()">Load</button>
+<button onclick="room()">Chia phòng</button>
 
-<h2>Admin Du Lịch</h2>
-
-<button onclick="autoRoom()">Xếp phòng tự động</button>
+<div id="stats"></div>
+<div id="rooms"></div>
 
 <script>
+const API="https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec";
 
-const API="https://script.google.com/macros/s/AKfycbydnC46ulhR_fPb6xYGNWZeHOUb3NKCX9JuxZA_jySRXF4dNvFKtA_t0qnDvksLat6XhA/exec"
+async function load(){
+  let r=await fetch(API+"?action=stats");
+  let d=await r.json();
 
-function autoRoom(){
-
-fetch(API+"?action=rooms")
-
-alert("Đã xếp phòng")
-
+  stats.innerHTML=`
+  Tổng: ${d.tong}<br>
+  Trẻ em: ${d.tre}<br>
+  Phòng: ${d.phong}
+  `;
 }
 
-</script>
+async function room(){
+  let r=await fetch(API+"?action=rooms");
+  let d=await r.json();
 
-</body>
-</html>
+  rooms.innerHTML=d.map(x=>
+    `<div>Phòng ${x.room}: ${x.members.join(", ")}</div>`
+  ).join("");
+}
+</script>
